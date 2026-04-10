@@ -11,7 +11,7 @@ export const ProjectProvider = ({ children }) => {
     const { data } = await api.get(`/projects/${id}`);
     setProject(data);
     // Navigate to first incomplete module
-    const firstIncomplete = [1, 2, 3, 4, 5, 6].find((i) => !data.modules?.[i]?.completed) || 6;
+    const firstIncomplete = [1, 2, 3, 4, 5, 6, 7].find((i) => !data.modules?.[i]?.completed) || 7;
     setCurrentModule(firstIncomplete);
   }, []);
 
@@ -21,7 +21,7 @@ export const ProjectProvider = ({ children }) => {
       { data }
     );
     setProject(updated);
-    if (moduleNum < 6) setCurrentModule(moduleNum + 1);
+    if (moduleNum < 7) setCurrentModule(moduleNum + 1);
   }, [project]);
 
   return (

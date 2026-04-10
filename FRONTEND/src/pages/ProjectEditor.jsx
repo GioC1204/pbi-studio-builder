@@ -6,18 +6,20 @@ import ProgressBar from '../components/layout/ProgressBar';
 import Module1DataSource from '../components/modules/Module1DataSource';
 import Module2Theme from '../components/modules/Module2Theme';
 import Module3Business from '../components/modules/Module3Business';
-import Module4Security from '../components/modules/Module4Security';
-import Module5Review from '../components/modules/Module5Review';
-import Module6Documentation from '../components/modules/Module6Documentation';
+import Module4Pages from '../components/modules/Module4Pages';
+import Module5Security from '../components/modules/Module5Security';
+import Module6Review from '../components/modules/Module6Review';
+import Module7Documentation from '../components/modules/Module7Documentation';
 import { useProject } from '../context/ProjectContext';
 
 const MODULES = {
   1: Module1DataSource,
   2: Module2Theme,
   3: Module3Business,
-  4: Module4Security,
-  5: Module5Review,
-  6: Module6Documentation,
+  4: Module4Pages,
+  5: Module5Security,
+  6: Module6Review,
+  7: Module7Documentation,
 };
 
 const ProjectEditor = () => {

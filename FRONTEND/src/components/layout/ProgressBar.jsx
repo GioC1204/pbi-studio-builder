@@ -1,18 +1,19 @@
 import React from 'react';
-import { Database, Palette, BarChart2, Shield, ClipboardCheck, BookOpen, Check } from 'lucide-react';
+import { Database, Palette, BarChart2, Shield, ClipboardCheck, BookOpen, Check, Layout } from 'lucide-react';
 
 const STEPS = [
   { id: 1, short: 'Datos',     Icon: Database },
   { id: 2, short: 'Tema',      Icon: Palette },
   { id: 3, short: 'Negocio',   Icon: BarChart2 },
-  { id: 4, short: 'Seguridad', Icon: Shield },
-  { id: 5, short: 'Revisión',  Icon: ClipboardCheck },
-  { id: 6, short: 'Docs',      Icon: BookOpen },
+  { id: 4, short: 'Páginas',   Icon: Layout },
+  { id: 5, short: 'Seguridad', Icon: Shield },
+  { id: 6, short: 'Revisión',  Icon: ClipboardCheck },
+  { id: 7, short: 'Docs',      Icon: BookOpen },
 ];
 
 const ProgressBar = ({ current, modules }) => {
   const completedCount = Object.values(modules || {}).filter((m) => m.completed).length;
-  const pct = Math.round((completedCount / 6) * 100);
+  const pct = Math.round((completedCount / 7) * 100);
 
   return (
     <div style={{
