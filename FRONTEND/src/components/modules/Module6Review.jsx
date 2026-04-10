@@ -21,24 +21,50 @@ const Module5Review = () => {
   const eventSource = useRef(null);
 
   const modules = project?.modules || {};
-  const allCompleted = [1, 2, 3, 4].every((i) => modules[i]?.completed);
+  const allCompleted = [1, 2, 3, 4, 6].every((i) => modules[i]?.completed);
+
+  // On mount: check DB status so we show download button if already completed
+  useEffect(() => {
+    if (!project?.id) return;
+    api.get(`/projects/${project.id}/status`).then(({ data }) => {
+      if (data.status === 'completed') {
+        setCompleted(true);
+        setDownloadUrl(`/projects/${project.id}/download`);
+      } else if (data.status === 'generating') {
+        setGenerating(true);
+        pollStatus();
+      }
+    }).catch(() => {});
+  }, [project?.id]);
+
+  const pollStatus = () => {
+    const interval = setInterval(async () => {
+      try {
+        const { data } = await api.get(`/projects/${project.id}/status`);
+        if (data.status === 'completed') {
+          clearInterval(interval);
+          setProgress(100);
+          setCompleted(true);
+          setDownloadUrl(`/projects/${project.id}/download`);
+          setGenerating(false);
+        } else if (data.status === 'error') {
+          clearInterval(interval);
+          setGenerating(false);
+          setCurrentStep('Error durante la generación. Intenta de nuevo.');
+        }
+      } catch {
+        clearInterval(interval);
+      }
+    }, 3000);
+  };
 
   const startGeneration = async () => {
     setGenerating(true);
+    setProgress(0);
+    setCurrentStep('Iniciando generación...');
     await saveModule(5, { confirmed: true, notes: '' });
     await api.post(`/projects/${project.id}/generate`);
-
-    eventSource.current = new EventSource(`/api/projects/${project.id}/status/stream`);
-    eventSource.current.onmessage = (e) => {
-      const data = JSON.parse(e.data);
-      setProgress(data.percent);
-      setCurrentStep(data.message);
-      if (data.step === 'completed') {
-        setCompleted(true);
-        setDownloadUrl(`/api/projects/${project.id}/download`);
-        eventSource.current.close();
-      }
-    };
+    pollStatus();
   };
 
   useEffect(() => () => eventSource.current?.close(), []);
