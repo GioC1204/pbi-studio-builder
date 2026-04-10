@@ -111,7 +111,7 @@ const Module4Security = () => {
         filter_table: criterion,
         filter_expression: `[${p.filter_column || criterion}] = USERNAME()`,
       }));
-    saveModule(4, { access_type: accessType, criterion, profiles, rls_enabled: accessType === 'filtered', roles });
+    saveModule(5, { access_type: accessType, criterion, profiles, rls_enabled: accessType === 'filtered', roles });
   };
 
   return (

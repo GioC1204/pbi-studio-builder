@@ -120,7 +120,7 @@ async function generateReport(config, dir) {
   const reportDir = path.join(dir, `${config.project_name}.Report`, 'definition', 'pages');
   fs.mkdirSync(reportDir, { recursive: true });
 
-  const pages = config.module3?.pages || [{ name: 'Overview', visuals: [] }];
+  const pages = config.module4?.pages || config.module3?.pages || [{ name: 'Overview', visuals: [] }];
   for (const page of pages) {
     const pageDir = path.join(reportDir, page.name.replace(/\s/g, '_'));
     fs.mkdirSync(pageDir, { recursive: true });
@@ -221,7 +221,7 @@ async function generateDocumentation(config, dir) {
   const tables = config.module1?.tables || [];
   const measures = config.module3?.kpis || [];
   const roles = config.module4?.roles || [];
-  const pages = config.module3?.pages || [];
+  const pages = config.module4?.pages || config.module3?.pages || [];
 
   const header = (title) =>
     `# ${title}\n\n` +
