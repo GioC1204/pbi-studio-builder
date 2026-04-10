@@ -60,6 +60,9 @@ exports.start = async (req, res, next) => {
       );
     }).catch(async (err) => {
       console.error('Generation error:', err);
+      // Notify frontend via SSE so the progress bar shows the error
+      const errClients = sseClients.get(id) || [];
+      errClients.forEach((c) => c.write(`data: ${JSON.stringify({ step: 'error', percent: 0, message: `Error: ${err.message}` })}\n\n`));
       await db.query(
         "UPDATE projects SET status = 'error', updated_at = NOW() WHERE id = $1",
         [id]
@@ -115,9 +118,19 @@ exports.download = async (req, res, next) => {
     res.setHeader('Content-Disposition', `attachment; filename="${project.name}.zip"`);
 
     const archive = archiver('zip', { zlib: { level: 9 } });
+
+    archive.on('error', (err) => {
+      console.error('Archiver error:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Error al comprimir archivos' });
+      } else {
+        res.destroy();
+      }
+    });
+
     archive.pipe(res);
     archive.directory(projectDir, false);
-    archive.finalize();
+    await archive.finalize();
   } catch (err) {
     next(err);
   }
