@@ -9,7 +9,8 @@ import NotFound from './pages/NotFound';
 import { useUser } from './context/UserContext';
 
 const PrivateRoute = ({ children }) => {
-  const { user } = useUser();
+  const { user, loading } = useUser();
+  if (loading) return null;
   return user ? children : <Navigate to="/login" replace />;
 };
 
