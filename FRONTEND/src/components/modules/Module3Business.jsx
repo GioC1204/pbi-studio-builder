@@ -1,18 +1,19 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useProject } from '../../context/ProjectContext';
 import api from '../../services/api';
+import { BarChart2, TrendingUp, PieChart, Table, CreditCard, LayoutGrid, TrendingDown, Gauge, Calendar } from 'lucide-react';
 
-const FORMATS = ['$ Moneda', '% Porcentaje', '# Número', '📅 Fecha'];
+const FORMATS = ['$ Moneda', '% Porcentaje', '# Número', 'Fecha'];
 
 const VISUALS = [
-  { type: 'bar',    icon: '📊', label: 'Barras' },
-  { type: 'line',   icon: '📈', label: 'Líneas' },
-  { type: 'pie',    icon: '🥧', label: 'Torta' },
-  { type: 'table',  icon: '🔢', label: 'Tabla' },
-  { type: 'card',   icon: '🃏', label: 'Tarjeta KPI' },
-  { type: 'matrix', icon: '🗃️', label: 'Matriz' },
-  { type: 'area',   icon: '📉', label: 'Área' },
-  { type: 'gauge',  icon: '🌡️', label: 'Gauge' },
+  { type: 'bar',    Icon: BarChart2,    label: 'Barras' },
+  { type: 'line',   Icon: TrendingUp,   label: 'Líneas' },
+  { type: 'pie',    Icon: PieChart,     label: 'Torta' },
+  { type: 'table',  Icon: Table,        label: 'Tabla' },
+  { type: 'card',   Icon: CreditCard,   label: 'Tarjeta KPI' },
+  { type: 'matrix', Icon: LayoutGrid,   label: 'Matriz' },
+  { type: 'area',   Icon: TrendingDown, label: 'Área' },
+  { type: 'gauge',  Icon: Gauge,        label: 'Gauge' },
 ];
 
 const FILTER_OPTIONS = ['Fecha', 'Región', 'Categoría', 'Vendedor', 'Canal', 'Año'];
@@ -376,7 +377,7 @@ const PageBlock = ({ page, kpiNames, onChange, onRemove }) => {
           <div className="grid grid-cols-4 gap-2 mt-1">
             {VISUALS.map(v => (
               <button key={v.type} onClick={() => onChange('visual_type', v.type)} className={`flex flex-col items-center justify-center gap-1 py-2.5 px-1 rounded-xl border-2 transition-all ${page.visual_type === v.type ? 'border-brand-400 bg-brand-50' : 'border-surface-100 bg-white hover:border-surface-300'}`}>
-                <span className="text-2xl leading-none">{v.icon}</span>
+                <v.Icon size={20} strokeWidth={1.75} />
                 <span className={`text-2xs font-medium ${page.visual_type === v.type ? 'text-brand-600' : 'text-surface-500'}`}>{v.label}</span>
               </button>
             ))}

@@ -1,40 +1,41 @@
 import React, { useState } from 'react';
 import { useProject } from '../../context/ProjectContext';
+import { FileText, Ruler, Lock, BookOpen, Settings, Rocket } from 'lucide-react';
 
 const DOCUMENTS = [
   {
     key: 'generate_data_dictionary',
-    icon: '🗂️',
+    Icon: FileText,
     label: 'Diccionario de Datos',
     desc: 'Tablas, columnas, tipos y descripciones de todo el modelo.',
   },
   {
     key: 'generate_measures_guide',
-    icon: '📐',
+    Icon: Ruler,
     label: 'Guía de Medidas DAX',
     desc: 'Fórmulas, descripción y ejemplos de uso de cada medida.',
   },
   {
     key: 'generate_rls_docs',
-    icon: '🔒',
+    Icon: Lock,
     label: 'Documentación de Seguridad',
     desc: 'Roles RLS, reglas de filtro y usuarios asignados.',
   },
   {
     key: 'generate_user_manual',
-    icon: '📖',
+    Icon: BookOpen,
     label: 'Manual de Usuario',
     desc: 'Guía de uso del dashboard para usuarios finales. No técnica.',
   },
   {
     key: 'generate_technical_spec',
-    icon: '⚙️',
+    Icon: Settings,
     label: 'Especificación Técnica',
     desc: 'Arquitectura del modelo, relaciones, supuestos y decisiones de diseño.',
   },
   {
     key: 'generate_deployment_guide',
-    icon: '🚀',
+    Icon: Rocket,
     label: 'Guía de Despliegue',
     desc: 'Instrucciones para publicar en Power BI Service y configurar gateway.',
   },
@@ -88,7 +89,7 @@ const Module6Documentation = () => {
             />
             <div>
               <div className="flex items-center gap-2">
-                <span>{doc.icon}</span>
+                <doc.Icon size={16} color={config[doc.key] ? '#F2C811' : '#A1A1AA'} strokeWidth={1.75} />
                 <span className="text-sm font-semibold text-gray-800">{doc.label}</span>
               </div>
               <p className="text-xs text-gray-500 mt-0.5">{doc.desc}</p>
@@ -152,7 +153,7 @@ const Module6Documentation = () => {
           <ul className="space-y-1">
             {DOCUMENTS.filter((d) => config[d.key]).map((d) => (
               <li key={d.key} className="text-xs text-gray-600 flex items-center gap-2">
-                <span className="text-green-500">✓</span>
+                <d.Icon size={12} color="#10B981" strokeWidth={2} />
                 {d.label.toLowerCase().replace(/ /g, '_')}.md
               </li>
             ))}

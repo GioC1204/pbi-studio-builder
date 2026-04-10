@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
 import { useProject } from '../../context/ProjectContext';
 import api from '../../services/api';
+import { Database, Upload, Cloud, Plug, Check, ClipboardList } from 'lucide-react';
 
 // ── Type inference ────────────────────────────────
 function inferType(values) {
@@ -67,10 +68,10 @@ const DataPreview = ({ headers, rows, columns }) => (
 
 // ── Cloud connection form fields by type ──────────
 const CLOUD_SOURCES = [
-  { id: 's3',        icon: '☁️', label: 'AWS S3' },
-  { id: 'postgres',  icon: '🐘', label: 'PostgreSQL' },
-  { id: 'mysql',     icon: '🐬', label: 'MySQL' },
-  { id: 'sqlserver', icon: '🪟', label: 'SQL Server' },
+  { id: 's3',        Icon: Cloud,    label: 'AWS S3' },
+  { id: 'postgres',  Icon: Database, label: 'PostgreSQL' },
+  { id: 'mysql',     Icon: Database, label: 'MySQL' },
+  { id: 'sqlserver', Icon: Database, label: 'SQL Server' },
 ];
 
 const S3_FIELDS = [
@@ -127,7 +128,7 @@ const CloudForm = ({ projectId, onConnected }) => {
             onClick={() => { setSourceType(s.id); setCreds({}); setError(''); setSuccess(''); }}
             className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border-2 transition-all ${sourceType === s.id ? 'border-yellow-400 bg-yellow-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}
           >
-            <span className="text-2xl">{s.icon}</span>
+            <s.Icon size={20} color={sourceType === s.id ? '#F2C811' : '#9CA3AF'} strokeWidth={1.75} />
             <span className={`text-xs font-semibold ${sourceType === s.id ? 'text-yellow-700' : 'text-gray-600'}`}>{s.label}</span>
           </button>
         ))}
@@ -151,14 +152,19 @@ const CloudForm = ({ projectId, onConnected }) => {
 
       {/* Feedback */}
       {error && <div className="mb-3 bg-red-50 border border-red-200 text-red-700 text-xs px-3 py-2 rounded-lg">{error}</div>}
-      {success && <div className="mb-3 bg-green-50 border border-green-200 text-green-700 text-xs px-3 py-2 rounded-lg">✓ {success}</div>}
+      {success && (
+        <div className="mb-3 bg-green-50 border border-green-200 text-green-700 text-xs px-3 py-2 rounded-lg flex items-center gap-1.5">
+          <Check size={12} /> {success}
+        </div>
+      )}
 
       <button
         onClick={handleTest}
         disabled={testing}
-        className="bg-gray-900 hover:bg-gray-800 disabled:opacity-40 text-white text-sm font-semibold px-5 py-2.5 rounded-lg"
+        className="bg-gray-900 hover:bg-gray-800 disabled:opacity-40 text-white text-sm font-semibold px-5 py-2.5 rounded-lg flex items-center gap-2"
       >
-        {testing ? 'Probando conexión...' : '🔌 Probar conexión'}
+        <Plug size={14} />
+        {testing ? 'Probando conexión...' : 'Probar conexión'}
       </button>
 
       <p className="text-xs text-gray-400 mt-2">Las credenciales se encriptan (AES-256) antes de guardarse. Nunca se exponen al frontend.</p>
@@ -274,9 +280,7 @@ const Module1DataSource = () => {
       <div className="flex items-start gap-3 mb-5">
         <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
           style={{ background: 'linear-gradient(135deg,#FEF3C7,#FDE68A)', color: '#F2C811' }}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-            <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/>
-          </svg>
+          <Database size={20} strokeWidth={1.75} />
         </div>
         <div>
           <h2 className="text-base font-bold text-gray-900">Módulo 1 — Fuente de Datos</h2>
@@ -288,15 +292,15 @@ const Module1DataSource = () => {
       <div className="flex border-b border-gray-200 mb-6">
         <button
           onClick={() => setActiveTab('file')}
-          className={`text-sm font-medium px-5 py-2.5 border-b-2 transition-colors ${activeTab === 'file' ? 'border-yellow-400 text-yellow-700' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+          className={`flex items-center gap-1.5 text-sm font-medium px-5 py-2.5 border-b-2 transition-colors ${activeTab === 'file' ? 'border-yellow-400 text-yellow-700' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
         >
-          📂 Subir archivo
+          <Upload size={14} /> Subir archivo
         </button>
         <button
           onClick={() => setActiveTab('cloud')}
-          className={`text-sm font-medium px-5 py-2.5 border-b-2 transition-colors ${activeTab === 'cloud' ? 'border-yellow-400 text-yellow-700' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+          className={`flex items-center gap-1.5 text-sm font-medium px-5 py-2.5 border-b-2 transition-colors ${activeTab === 'cloud' ? 'border-yellow-400 text-yellow-700' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
         >
-          ☁️ Conectar a la nube
+          <Cloud size={14} /> Conectar a la nube
         </button>
       </div>
 
@@ -310,7 +314,15 @@ const Module1DataSource = () => {
       {/* Upload area */}
       {activeTab === 'file' && (
       <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center mb-4">
-        <div className="text-3xl mb-2">🗄️</div>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
+          <div style={{
+            width: 52, height: 52, borderRadius: 12,
+            background: 'linear-gradient(135deg, #FEF3C7, #FDE68A)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Upload size={24} color="#F2C811" strokeWidth={1.75} />
+          </div>
+        </div>
         <p className="text-sm text-gray-500 mb-3">Arrastra archivos o haz clic para seleccionar</p>
         <p className="text-xs text-gray-400 mb-4">CSV, Excel (.xlsx, .xls), JSON</p>
         <label className="cursor-pointer bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium px-5 py-2 rounded-lg">
@@ -324,7 +336,9 @@ const Module1DataSource = () => {
           />
         </label>
         {fileName && !parsing && (
-          <p className="text-xs text-green-600 mt-2">✓ {fileName}</p>
+          <p className="text-xs text-green-600 mt-2 flex items-center justify-center gap-1">
+            <Check size={12} /> {fileName}
+          </p>
         )}
       </div>
       )} {/* end activeTab === 'file' */}
@@ -386,29 +400,34 @@ const Module1DataSource = () => {
     </div>{/* end left form */}
 
     {/* ── Right: summary panel ── */}
-    <div className="w-64 flex-shrink-0 bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100" style={{ background: '#FAFAFA' }}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F2C811" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
-          <path d="M15 2H9a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1z"/>
-          <line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/>
-        </svg>
-        <span className="text-xs font-bold text-gray-700">Resumen — Datos</span>
+    <div style={{
+      width: 260, flexShrink: 0,
+      background: '#0D1117',
+      borderRadius: 14, overflow: 'hidden',
+      border: '1px solid rgba(255,255,255,0.07)',
+      alignSelf: 'flex-start',
+    }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 8,
+        padding: '12px 16px',
+        borderBottom: '1px solid rgba(255,255,255,0.07)',
+      }}>
+        <ClipboardList size={14} color="#F2C811" strokeWidth={1.75} />
+        <span style={{ fontSize: 12, fontWeight: 700, color: '#E2E8F0' }}>Resumen — Datos</span>
       </div>
-      <div className="p-4 space-y-3">
+      <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
         {[
-          { label: 'Formato',         val: fileName ? fileName.split('.').pop().toUpperCase() : '—' },
-          { label: 'Tablas',          val: tables.length > 0 ? `${tables.length} detectadas` : '—' },
-          { label: 'Tabla de hechos', val: factTable?.name || '—' },
-          { label: 'Dimensiones',     val: dims.length > 0 ? dims.map((d) => d.name).join(' · ') : '—' },
-          { label: 'Columnas totales',val: tables.reduce((a, t) => a + (t.columns?.length || 0), 0) || '—' },
-          { label: 'Tabla de fechas', val: tables.some((t) => /date|fecha/i.test(t.name))
-            ? <span style={{ color: '#16A34A', fontWeight: 600 }}>✓ Auto-generada</span>
-            : '—' },
-        ].map(({ label, val }) => (
-          <div key={label} className="flex justify-between items-start gap-2">
-            <span className="text-xs text-gray-400 flex-shrink-0">{label}</span>
-            <span className="text-xs font-semibold text-gray-700 text-right">{val}</span>
+          { label: 'Formato',          val: fileName ? fileName.split('.').pop().toUpperCase() : '—', color: '#F2C811' },
+          { label: 'Tablas',           val: tables.length > 0 ? `${tables.length} detectadas` : '—', color: '#F2C811' },
+          { label: 'Tabla de hechos',  val: factTable?.name || '—', color: '#60A5FA' },
+          { label: 'Dimensiones',      val: dims.length > 0 ? dims.map((d) => d.name).join(' · ') : '—', color: '#60A5FA' },
+          { label: 'Relaciones',       val: dims.length > 0 ? `${dims.length} definida${dims.length !== 1 ? 's' : ''}` : '—', color: '#F2C811' },
+          { label: 'Tabla de fechas',  val: tables.some((t) => /date|fecha/i.test(t.name)) ? '✓ Auto-generada' : '—',
+            color: tables.some((t) => /date|fecha/i.test(t.name)) ? '#34D399' : '#64748B' },
+        ].map(({ label, val, color }) => (
+          <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+            <span style={{ fontSize: 12, color: '#64748B', flexShrink: 0 }}>{label}</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color, textAlign: 'right' }}>{val}</span>
           </div>
         ))}
       </div>

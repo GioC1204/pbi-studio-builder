@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { useProject } from '../../context/ProjectContext';
+import { Globe, User, Building2, Tag, Map, Pencil, Eye, Lock } from 'lucide-react';
 
 const CRITERIA = [
-  { id: 'region',      icon: '🌍', label: 'Región' },
-  { id: 'seller',      icon: '👤', label: 'Vendedor' },
-  { id: 'department',  icon: '🏢', label: 'Departamento' },
-  { id: 'category',    icon: '🏷️', label: 'Categoría' },
-  { id: 'country',     icon: '🗺️', label: 'País' },
-  { id: 'custom',      icon: '✏️', label: 'Otro...' },
+  { id: 'region',      Icon: Globe,     label: 'Región' },
+  { id: 'seller',      Icon: User,      label: 'Vendedor' },
+  { id: 'department',  Icon: Building2, label: 'Departamento' },
+  { id: 'category',    Icon: Tag,       label: 'Categoría' },
+  { id: 'country',     Icon: Map,       label: 'País' },
+  { id: 'custom',      Icon: Pencil,    label: 'Otro...' },
 ];
 
-const PROFILE_ICONS = ['🌍', '👑', '🏢', '🏷️', '🗺️', '💼', '⭐'];
+const PROFILE_ACCENT_COLORS = ['#F2C811', '#3B82F6', '#10B981', '#F2C811', '#8B5CF6', '#F59E0B', '#3B82F6'];
 
 const AccessPreview = ({ profile, criterion }) => {
   if (profile.all_access) {
@@ -33,8 +34,9 @@ const ProfileCard = ({ profile, criterion, idx, onChange, onRemove }) => (
   <div className="border border-surface-200 rounded-xl overflow-hidden mb-3 transition-shadow hover:shadow-card animate-fade-in">
     {/* Header */}
     <div className="flex items-center gap-3 px-4 py-3 bg-surface-50 border-b border-surface-100">
-      <div className="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center text-sm flex-shrink-0">
-        {PROFILE_ICONS[idx % PROFILE_ICONS.length]}
+      <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+        style={{ background: `${PROFILE_ACCENT_COLORS[idx % PROFILE_ACCENT_COLORS.length]}20` }}>
+        <User size={15} color={PROFILE_ACCENT_COLORS[idx % PROFILE_ACCENT_COLORS.length]} strokeWidth={2} />
       </div>
       <input
         className="flex-1 text-sm font-semibold text-surface-900 bg-transparent border-none outline-none"
@@ -126,8 +128,8 @@ const Module4Security = () => {
       </div>
 
       {[
-        { id: 'all',      icon: '👁️', title: 'Sí, todos ven todo', desc: 'El dashboard muestra los mismos datos a cualquier persona que lo abra.' },
-        { id: 'filtered', icon: '🔐', title: 'No, cada persona ve solo sus datos', desc: 'Un gerente de región verá solo su región. Un vendedor solo sus ventas.' },
+        { id: 'all',      Icon: Eye,  title: 'Sí, todos ven todo', desc: 'El dashboard muestra los mismos datos a cualquier persona que lo abra.' },
+        { id: 'filtered', Icon: Lock, title: 'No, cada persona ve solo sus datos', desc: 'Un gerente de región verá solo su región. Un vendedor solo sus ventas.' },
       ].map(opt => (
         <div
           key={opt.id}
@@ -139,7 +141,10 @@ const Module4Security = () => {
           }`}
           style={{ boxShadow: accessType === opt.id ? '0 2px 8px rgba(242,200,17,.15)' : undefined }}
         >
-          <span className="text-3xl flex-shrink-0">{opt.icon}</span>
+          <div className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center"
+            style={{ background: accessType === opt.id ? 'rgba(242,200,17,0.15)' : '#F4F4F5' }}>
+            <opt.Icon size={20} color={accessType === opt.id ? '#F2C811' : '#A1A1AA'} strokeWidth={1.75} />
+          </div>
           <div className="flex-1">
             <p className="text-sm font-semibold text-surface-900">{opt.title}</p>
             <p className="text-xs text-surface-500 mt-0.5 leading-relaxed">{opt.desc}</p>
@@ -172,7 +177,7 @@ const Module4Security = () => {
                     : 'border-surface-100 bg-white hover:border-surface-300'
                 }`}
               >
-                <span className="text-2xl leading-none">{c.icon}</span>
+                <c.Icon size={20} color={criterion === c.label ? '#F2C811' : '#A1A1AA'} strokeWidth={1.75} />
                 <span className={`text-2xs font-semibold ${criterion === c.label ? 'text-brand-600' : 'text-surface-600'}`}>
                   {c.label}
                 </span>

@@ -1,13 +1,14 @@
 import React from 'react';
 import { useProject } from '../../context/ProjectContext';
+import { Database, Palette, BarChart2, Shield, ClipboardCheck, BookOpen, Check } from 'lucide-react';
 
 const MODULE_LIST = [
-  { id: 1, icon: '🗄️', label: 'Fuente de Datos' },
-  { id: 2, icon: '🎨', label: 'Tema Visual' },
-  { id: 3, icon: '📊', label: 'Lógica de Negocio' },
-  { id: 4, icon: '🔒', label: 'Seguridad' },
-  { id: 5, icon: '✅', label: 'Revisión' },
-  { id: 6, icon: '📚', label: 'Documentación' },
+  { id: 1, label: 'Fuente de Datos',   Icon: Database },
+  { id: 2, label: 'Tema Visual',        Icon: Palette },
+  { id: 3, label: 'Lógica de Negocio', Icon: BarChart2 },
+  { id: 4, label: 'Seguridad',          Icon: Shield },
+  { id: 5, label: 'Revisión',           Icon: ClipboardCheck },
+  { id: 6, label: 'Documentación',      Icon: BookOpen },
 ];
 
 const Sidebar = () => {
@@ -15,61 +16,101 @@ const Sidebar = () => {
   const modules = project?.modules || {};
 
   return (
-    <aside className="w-56 min-h-screen bg-white border-r border-surface-100 py-6 px-3 flex flex-col">
-      <p className="section-title px-3 mb-3">Módulos</p>
+    <aside style={{
+      width: 200,
+      flexShrink: 0,
+      background: 'linear-gradient(180deg, #0F172A 0%, #0B111E 100%)',
+      borderRight: '1px solid rgba(255,255,255,0.06)',
+      display: 'flex',
+      flexDirection: 'column',
+      padding: '20px 12px',
+      fontFamily: 'Inter, system-ui, sans-serif',
+      overflowY: 'auto',
+    }}>
+      <p className="section-title-accent" style={{ padding: '0 8px', marginBottom: 14 }}>
+        Módulos
+      </p>
 
-      <nav className="space-y-0.5 flex-1">
+      <nav style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {MODULE_LIST.map((m) => {
           const completed = modules[m.id]?.completed;
-          const active    = currentModule === m.id;
+          const active = currentModule === m.id;
 
           return (
             <button
               key={m.id}
               onClick={() => setCurrentModule(m.id)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors group ${
-                active
-                  ? 'bg-brand-50 text-surface-900 font-semibold'
-                  : 'text-surface-600 hover:bg-surface-50 hover:text-surface-900'
-              }`}
+              className={active ? 'sidebar-item-active' : ''}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                padding: active ? '8px 10px 8px 8px' : '8px 10px',
+                borderRadius: 8,
+                border: 'none',
+                cursor: 'pointer',
+                background: active ? undefined : 'transparent',
+                textAlign: 'left',
+                fontFamily: 'inherit',
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+              }}
+              onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+              onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = 'transparent'; }}
             >
-              {/* Step indicator */}
-              <span className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-2xs font-bold transition-colors ${
-                completed
-                  ? 'bg-success text-white'
+              {/* Badge */}
+              <span style={{
+                flexShrink: 0,
+                width: 22, height: 22,
+                borderRadius: '50%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 10, fontWeight: 700,
+                background: completed
+                  ? '#10B981'
                   : active
-                    ? 'bg-brand-400 text-surface-950'
-                    : 'bg-surface-100 text-surface-400 group-hover:bg-surface-200'
-              }`}>
-                {completed ? '✓' : m.id}
+                  ? 'linear-gradient(135deg, #F2C811, #FCD34D)'
+                  : 'rgba(255,255,255,0.08)',
+                color: completed ? '#FFFFFF' : active ? '#0F172A' : 'rgba(255,255,255,0.4)',
+                transition: 'all 0.2s ease',
+              }}>
+                {completed ? <Check size={11} /> : m.id}
               </span>
 
-              <span className="flex-1 text-left truncate">{m.label}</span>
+              {/* Icon */}
+              <span style={{
+                flexShrink: 0,
+                color: active ? '#F2C811' : completed ? '#10B981' : 'rgba(255,255,255,0.35)',
+                display: 'flex', alignItems: 'center',
+                transition: 'color 0.2s ease',
+              }}>
+                <m.Icon size={16} strokeWidth={1.75} />
+              </span>
+
+              {/* Label */}
+              <span style={{
+                flex: 1,
+                fontSize: 13,
+                fontWeight: active ? 600 : 400,
+                color: active ? '#F2C811' : completed ? '#E2E8F0' : 'rgba(255,255,255,0.45)',
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                transition: 'color 0.2s ease',
+              }}>
+                {m.label}
+              </span>
 
               {/* Active dot */}
-              {active && <span className="w-1.5 h-1.5 rounded-full bg-brand-400 flex-shrink-0" />}
+              {active && (
+                <span style={{
+                  flexShrink: 0,
+                  width: 5, height: 5, borderRadius: '50%',
+                  background: '#F2C811',
+                  boxShadow: '0 0 4px rgba(242,200,17,0.6)',
+                }} />
+              )}
             </button>
           );
         })}
       </nav>
-
-      {/* Footer info */}
-      {project && (
-        <div className="px-3 pt-4 border-t border-surface-100">
-          <p className="text-2xs text-surface-400 truncate" title={project.name}>
-            {project.name}
-          </p>
-          <span className={`badge mt-1 ${
-            project.status === 'completed' ? 'badge-success' :
-            project.status === 'generating' ? 'badge-warning' :
-            project.status === 'error' ? 'badge-error' : 'badge-neutral'
-          }`}>
-            {project.status === 'completed' ? 'Completado' :
-             project.status === 'generating' ? 'Generando...' :
-             project.status === 'error' ? 'Error' : 'Borrador'}
-          </span>
-        </div>
-      )}
     </aside>
   );
 };

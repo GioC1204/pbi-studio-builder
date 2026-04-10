@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/layout/Header';
 import api from '../services/api';
+import { Database, Palette, BarChart2, Lock, BookOpen, Zap, Sparkles } from 'lucide-react';
 
 const FEATURES = [
   {
@@ -9,75 +10,48 @@ const FEATURES = [
     iconBg: '#FEF3C7',
     title: 'Fuente de datos',
     desc: 'Importa CSV, Excel o JSON. El modelo detecta tablas y relaciones automáticamente.',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }}>
-        <ellipse cx="12" cy="5" rx="9" ry="3"/>
-        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
-        <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/>
-      </svg>
-    ),
+    Icon: Database,
   },
   {
     iconColor: '#3B82F6',
     iconBg: '#DBEAFE',
     title: 'Tema visual',
     desc: 'Aplica tu paleta de colores, tipografía y logo corporativo en un clic.',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }}>
-        <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125A1.64 1.64 0 0 1 14.441 17.5h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>
-        <circle cx="7.5" cy="10" r="1" fill="currentColor"/>
-        <circle cx="14" cy="7" r="1" fill="currentColor"/>
-      </svg>
-    ),
+    Icon: Palette,
   },
   {
     iconColor: '#8B5CF6',
     iconBg: '#EDE9FE',
     title: 'Medidas DAX',
     desc: 'Define KPIs y el agente POLARIS genera las fórmulas DAX correctas.',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }}>
-        <line x1="18" y1="20" x2="18" y2="10"/>
-        <line x1="12" y1="20" x2="12" y2="4"/>
-        <line x1="6" y1="20" x2="6" y2="14"/>
-      </svg>
-    ),
+    Icon: BarChart2,
   },
   {
     iconColor: '#EF4444',
     iconBg: '#FEE2E2',
     title: 'Seguridad RLS',
     desc: 'Configura roles de Row-Level Security sin escribir una línea de código.',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }}>
-        <rect x="3" y="11" width="18" height="11" rx="2"/>
-        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-      </svg>
-    ),
+    Icon: Lock,
   },
   {
     iconColor: '#10B981',
     iconBg: '#D1FAE5',
     title: 'Documentación técnica',
     desc: 'Genera diccionario de datos, guía DAX, manual de usuario y más automáticamente.',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }}>
-        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-      </svg>
-    ),
+    Icon: BookOpen,
   },
   {
     iconColor: '#F59E0B',
     iconBg: '#FEF3C7',
     title: 'Listo para Desktop',
     desc: 'Descarga un .pbip que abre directamente en Power BI Desktop sin errores.',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }}>
-        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-      </svg>
-    ),
+    Icon: Zap,
   },
+];
+
+const STAGGER_CLASSES = [
+  'animate-stagger-1', 'animate-stagger-2', 'animate-stagger-3',
+  'animate-stagger-4', 'animate-stagger-5', 'animate-stagger-6',
 ];
 
 export default function HomePage() {
@@ -101,7 +75,17 @@ export default function HomePage() {
         background: 'linear-gradient(160deg, #0F172A 0%, #0B1120 60%, #0F172A 100%)',
         padding: '80px 24px',
         textAlign: 'center',
+        position: 'relative',
+        overflow: 'hidden',
       }}>
+        {/* Radial glow backdrop */}
+        <div style={{
+          position: 'absolute', top: '40%', left: '50%', transform: 'translate(-50%, -50%)',
+          width: 700, height: 350, borderRadius: '50%', pointerEvents: 'none',
+          background: 'radial-gradient(ellipse, rgba(242,200,17,0.07) 0%, rgba(59,130,246,0.05) 45%, transparent 70%)',
+          filter: 'blur(48px)',
+        }} />
+
         {/* Badge */}
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -109,24 +93,33 @@ export default function HomePage() {
           border: '1px solid rgba(242, 200, 17, 0.3)',
           borderRadius: 999, padding: '5px 14px',
           fontSize: 12, fontWeight: 600, color: '#F2C811',
-          marginBottom: 24,
+          marginBottom: 24, position: 'relative',
         }}>
-          ⭐ Powered by POLARIS Agent
+          <Sparkles size={12} />
+          Powered by POLARIS Agent
         </div>
 
-        <h1 style={{ fontSize: 48, fontWeight: 800, color: '#FFFFFF', lineHeight: 1.2, margin: '0 0 16px' }}>
+        <h1 style={{
+          fontSize: 48, fontWeight: 800, color: '#FFFFFF',
+          lineHeight: 1.15, margin: '0 0 16px',
+          letterSpacing: '-0.025em', position: 'relative',
+        }}>
           Dashboards Power BI<br />
-          <span style={{ color: '#F2C811' }}>en minutos, no horas</span>
+          <span className="text-gradient-shimmer">en minutos, no horas</span>
         </h1>
 
-        <p style={{ fontSize: 17, color: '#94A3B8', maxWidth: 520, margin: '0 auto 36px', lineHeight: 1.65 }}>
+        <p style={{
+          fontSize: 17, color: '#94A3B8', maxWidth: 520,
+          margin: '0 auto 36px', lineHeight: 1.65, position: 'relative',
+        }}>
           Completa 6 módulos guiados y obtén un archivo .pbip completamente funcional
           con documentación técnica incluida.
         </p>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, position: 'relative' }}>
           <button
             onClick={handleNewProject}
+            className="btn-shimmer"
             style={{
               background: 'linear-gradient(90deg, #F2C811, #FCD34D)',
               color: '#09090B', fontWeight: 700, fontSize: 14,
@@ -158,11 +151,7 @@ export default function HomePage() {
 
       {/* ── Features ── */}
       <section style={{ maxWidth: 960, margin: '0 auto', padding: '64px 24px' }}>
-        <p style={{
-          textAlign: 'center', fontSize: 11, fontWeight: 700,
-          letterSpacing: '0.1em', textTransform: 'uppercase',
-          color: '#A1A1AA', marginBottom: 40,
-        }}>
+        <p className="section-title-accent" style={{ textAlign: 'center', marginBottom: 40 }}>
           Qué incluye cada generación
         </p>
 
@@ -171,28 +160,20 @@ export default function HomePage() {
           gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
           gap: 16,
         }}>
-          {FEATURES.map((f) => (
+          {FEATURES.map((f, i) => (
             <div
               key={f.title}
-              style={{
-                background: '#FFFFFF',
-                borderRadius: 14,
-                border: '1px solid #E4E4E7',
-                padding: '20px',
-                boxShadow: '0 1px 3px rgba(0,0,0,.06)',
-                transition: 'box-shadow .2s, transform .2s',
-                cursor: 'default',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,.1)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,.06)'; e.currentTarget.style.transform = ''; }}
+              className={`card-premium ${STAGGER_CLASSES[i]}`}
+              style={{ padding: '20px', cursor: 'default' }}
             >
               <div style={{
                 width: 40, height: 40, borderRadius: 10,
                 background: f.iconBg, color: f.iconColor,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 marginBottom: 14,
+                boxShadow: `inset 0 0 0 1px ${f.iconColor}20`,
               }}>
-                {f.icon}
+                <f.Icon size={20} strokeWidth={1.75} />
               </div>
               <h3 style={{ fontSize: 14, fontWeight: 700, color: '#18181B', margin: '0 0 6px' }}>{f.title}</h3>
               <p style={{ fontSize: 13, color: '#71717A', lineHeight: 1.55, margin: 0 }}>{f.desc}</p>

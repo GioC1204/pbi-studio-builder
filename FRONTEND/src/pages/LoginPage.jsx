@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import api from '../services/api';
+import { BarChart2, Check } from 'lucide-react';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -36,7 +37,9 @@ const LoginPage = () => {
         />
 
         <div className="relative z-10 max-w-md">
-          <div className="text-4xl mb-2">⭐</div>
+          <div className="mb-3">
+            <BarChart2 size={32} color="#F2C811" strokeWidth={2} />
+          </div>
           <h1 className="text-4xl font-extrabold text-white leading-tight mb-3">
             PBI Studio<br />Builder
           </h1>
@@ -61,7 +64,7 @@ const LoginPage = () => {
                   className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold"
                   style={{ background: 'linear-gradient(135deg, #F2C811, #FCD34D)', color: '#09090B' }}
                 >
-                  ✓
+                  <Check size={13} strokeWidth={2.5} />
                 </div>
                 <span className="text-sm leading-snug" style={{ color: '#94A3B8' }}>{text}</span>
               </div>

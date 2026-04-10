@@ -2,12 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/layout/Header';
 import api from '../services/api';
+import { FolderOpen, Plus } from 'lucide-react';
 
-const STATUS_LABELS = {
-  draft: { label: 'Borrador', color: 'bg-gray-100 text-gray-600' },
-  generating: { label: 'Generando...', color: 'bg-blue-100 text-blue-700' },
-  completed: { label: 'Completado', color: 'bg-green-100 text-green-700' },
-  error: { label: 'Error', color: 'bg-red-100 text-red-700' },
+const STATUS_MAP = {
+  draft:      { label: 'Borrador',      cls: 'badge-neutral' },
+  generating: { label: 'Generando...',  cls: 'badge-warning' },
+  completed:  { label: 'Completado',    cls: 'badge-success' },
+  error:      { label: 'Error',         cls: 'badge-error' },
 };
 
 const ProjectList = () => {
@@ -27,12 +28,23 @@ const ProjectList = () => {
       <Header />
       <main className="max-w-5xl mx-auto px-4 py-10">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Mis Proyectos</h1>
+          <h1 className="text-2xl font-bold text-gradient" style={{ letterSpacing: '-0.02em' }}>
+            Mis Proyectos
+          </h1>
           <button
             onClick={() => navigate('/')}
-            className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold px-5 py-2 rounded-lg text-sm"
+            className="btn-shimmer"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              background: 'linear-gradient(90deg, #F2C811, #FCD34D)',
+              color: '#09090B', fontWeight: 700, fontSize: 13,
+              padding: '8px 18px', borderRadius: 8, border: 'none',
+              cursor: 'pointer', boxShadow: '0 2px 8px rgba(242,200,17,0.3)',
+              fontFamily: 'Inter, system-ui, sans-serif',
+            }}
           >
-            + Nuevo Proyecto
+            <Plus size={14} />
+            Nuevo Proyecto
           </button>
         </div>
 
@@ -47,22 +59,24 @@ const ProjectList = () => {
         ) : (
           <div className="space-y-3">
             {projects.map((p) => {
-              const status = STATUS_LABELS[p.status] || STATUS_LABELS.draft;
+              const status = STATUS_MAP[p.status] || STATUS_MAP.draft;
               return (
                 <div
                   key={p.id}
                   onClick={() => navigate(`/projects/${p.id}`)}
-                  className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition-shadow flex items-center justify-between"
+                  className="card-premium cursor-pointer"
+                  style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
                 >
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{p.name}</h3>
-                    <p className="text-sm text-gray-400 mt-1">
-                      Creado: {new Date(p.created_at).toLocaleDateString()}
-                    </p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <FolderOpen size={16} color="#A1A1AA" />
+                    <div>
+                      <h3 style={{ fontWeight: 600, color: '#18181B', fontSize: 14, margin: 0 }}>{p.name}</h3>
+                      <p style={{ fontSize: 12, color: '#A1A1AA', margin: '3px 0 0' }}>
+                        Creado: {new Date(p.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
                   </div>
-                  <span className={`text-xs font-medium px-3 py-1 rounded-full ${status.color}`}>
-                    {status.label}
-                  </span>
+                  <span className={status.cls}>{status.label}</span>
                 </div>
               );
             })}
