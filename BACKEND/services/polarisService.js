@@ -121,23 +121,119 @@ async function generateSemanticModel(config, dir) {
 }
 
 async function generateReport(config, dir) {
-  const reportDir = path.join(dir, `${config.project_name}.Report`, 'definition', 'pages');
-  fs.mkdirSync(reportDir, { recursive: true });
+  const definitionDir = path.join(dir, `${config.project_name}.Report`, 'definition');
+  fs.mkdirSync(definitionDir, { recursive: true });
 
-  const pages = config.module4?.pages || config.module3?.pages || [{ name: 'Overview', visuals: [] }];
+  // report.json — required by Power BI Desktop to link report → semantic model
+  const reportJson = {
+    id: require('crypto').randomUUID(),
+    themeCollection: {
+      baseTheme: { name: 'CY24SU10', version: '5.65', type: 2 },
+    },
+    datasetReference: {
+      byPath: { path: `../${config.project_name}.SemanticModel` },
+    },
+  };
+  fs.writeFileSync(path.join(definitionDir, 'report.json'), JSON.stringify(reportJson, null, 2));
+
+  const pagesDir = path.join(definitionDir, 'pages');
+  fs.mkdirSync(pagesDir, { recursive: true });
+
+  const kpis   = config.module3?.kpis   || [];
+  const tables = config.module1?.tables || [];
+  const factTable = tables.find((t) => t.is_fact_table) || tables[0];
+  const catCol = factTable
+    ? (factTable.columns || []).find((c) => ['text', 'string'].includes(c.type)) || factTable.columns?.[1] || { name: 'categoria' }
+    : { name: 'categoria' };
+
+  const pages = config.module4?.pages || config.module3?.pages || [
+    { name: 'Resumen', layout: 'executive', chart_type: 'barChart' },
+  ];
+
   for (const page of pages) {
-    const pageDir = path.join(reportDir, page.name.replace(/\s/g, '_'));
+    const safeName = page.name.replace(/[^a-zA-Z0-9]/g, '_');
+    const pageDir  = path.join(pagesDir, safeName);
     fs.mkdirSync(pageDir, { recursive: true });
-    const pageJson = {
-      name: page.name,
+
+    // page.json — metadata only, no visuals array
+    fs.writeFileSync(path.join(pageDir, 'page.json'), JSON.stringify({
+      name: safeName,
       displayName: page.name,
-      visuals: (page.visuals || []).map((v, i) => ({
-        name: `visual_${i}`,
-        type: v.type,
-        title: v.title,
-      })),
+      width: 1280,
+      height: 720,
+      background: {},
+      wallpaper: {},
+    }, null, 2));
+
+    if (!factTable || kpis.length === 0) continue;
+
+    // KPI card visuals (up to 3 across the top)
+    const kpiCount = Math.min(kpis.length, 3);
+    for (let i = 0; i < kpiCount; i++) {
+      const kpi = kpis[i];
+      const visual = {
+        name: `kpi_card_${i}`,
+        position: { x: 20 + i * 300, y: 20, z: 1000, height: 100, width: 280, tabOrder: i * 1000 },
+        visual: {
+          visualType: 'card',
+          query: {
+            queryState: {
+              Values: {
+                projections: [{
+                  field: {
+                    Measure: {
+                      Expression: { SourceRef: { Entity: factTable.name } },
+                      Property: kpi.name,
+                    },
+                  },
+                  queryRef: `${factTable.name}.${kpi.name}`,
+                }],
+              },
+            },
+          },
+          title: { show: true, text: kpi.name },
+        },
+      };
+      fs.writeFileSync(path.join(pageDir, `kpi_card_${i}.json`), JSON.stringify(visual, null, 2));
+    }
+
+    // Main chart visual (bar chart below the KPI cards)
+    const chartType = page.chart_type || 'barChart';
+    const chart = {
+      name: 'main_chart',
+      position: { x: 20, y: 140, z: 1000, height: 540, width: 1240, tabOrder: 10000 },
+      visual: {
+        visualType: chartType,
+        query: {
+          queryState: {
+            Category: {
+              projections: [{
+                field: {
+                  Column: {
+                    Expression: { SourceRef: { Entity: factTable.name } },
+                    Property: catCol.name,
+                  },
+                },
+                queryRef: `${factTable.name}.${catCol.name}`,
+              }],
+            },
+            Y: {
+              projections: kpis.map((kpi) => ({
+                field: {
+                  Measure: {
+                    Expression: { SourceRef: { Entity: factTable.name } },
+                    Property: kpi.name,
+                  },
+                },
+                queryRef: `${factTable.name}.${kpi.name}`,
+              })),
+            },
+          },
+        },
+        title: { show: true, text: page.name },
+      },
     };
-    fs.writeFileSync(path.join(pageDir, 'page.json'), JSON.stringify(pageJson, null, 2));
+    fs.writeFileSync(path.join(pageDir, 'main_chart.json'), JSON.stringify(chart, null, 2));
   }
 }
 
