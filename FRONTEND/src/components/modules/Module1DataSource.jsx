@@ -263,10 +263,26 @@ const Module1DataSource = () => {
     setPreview(null);
   };
 
+  const factTable = tables.find((t) => t.is_fact_table);
+  const dims = tables.filter((t) => !t.is_fact_table);
+
   return (
-    <div className="max-w-2xl">
-      <h2 className="text-xl font-bold text-gray-900 mb-1">Módulo 1 — Fuente de Datos</h2>
-      <p className="text-sm text-gray-500 mb-6">Sube tus archivos y define las tablas del modelo.</p>
+    <div className="flex gap-5 items-start">
+    {/* ── Left: form ── */}
+    <div className="flex-1 min-w-0">
+      {/* Module header */}
+      <div className="flex items-start gap-3 mb-5">
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+          style={{ background: 'linear-gradient(135deg,#FEF3C7,#FDE68A)', color: '#F2C811' }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+            <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/>
+          </svg>
+        </div>
+        <div>
+          <h2 className="text-base font-bold text-gray-900">Módulo 1 — Fuente de Datos</h2>
+          <p className="text-xs text-gray-500 mt-0.5">Sube tus archivos y define las tablas del modelo.</p>
+        </div>
+      </div>
 
       {/* Source tabs */}
       <div className="flex border-b border-gray-200 mb-6">
@@ -362,11 +378,42 @@ const Module1DataSource = () => {
       <button
         onClick={handleSave}
         disabled={tables.length === 0 || parsing}
-        className="bg-yellow-400 hover:bg-yellow-500 disabled:opacity-40 text-gray-900 font-semibold px-6 py-2.5 rounded-lg text-sm"
+        className="mt-6 px-6 py-2.5 rounded-lg font-bold text-sm disabled:opacity-40 transition-all hover:-translate-y-px"
+        style={{ background: 'linear-gradient(90deg,#F2C811,#FCD34D)', color: '#09090B', boxShadow: '0 2px 8px rgba(242,200,17,.3)' }}
       >
         Guardar y continuar →
       </button>
+    </div>{/* end left form */}
+
+    {/* ── Right: summary panel ── */}
+    <div className="w-64 flex-shrink-0 bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100" style={{ background: '#FAFAFA' }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F2C811" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+          <path d="M15 2H9a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1z"/>
+          <line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/>
+        </svg>
+        <span className="text-xs font-bold text-gray-700">Resumen — Datos</span>
+      </div>
+      <div className="p-4 space-y-3">
+        {[
+          { label: 'Formato',         val: fileName ? fileName.split('.').pop().toUpperCase() : '—' },
+          { label: 'Tablas',          val: tables.length > 0 ? `${tables.length} detectadas` : '—' },
+          { label: 'Tabla de hechos', val: factTable?.name || '—' },
+          { label: 'Dimensiones',     val: dims.length > 0 ? dims.map((d) => d.name).join(' · ') : '—' },
+          { label: 'Columnas totales',val: tables.reduce((a, t) => a + (t.columns?.length || 0), 0) || '—' },
+          { label: 'Tabla de fechas', val: tables.some((t) => /date|fecha/i.test(t.name))
+            ? <span style={{ color: '#16A34A', fontWeight: 600 }}>✓ Auto-generada</span>
+            : '—' },
+        ].map(({ label, val }) => (
+          <div key={label} className="flex justify-between items-start gap-2">
+            <span className="text-xs text-gray-400 flex-shrink-0">{label}</span>
+            <span className="text-xs font-semibold text-gray-700 text-right">{val}</span>
+          </div>
+        ))}
+      </div>
     </div>
+    </div>{/* end two-panel wrapper */}
   );
 };
 

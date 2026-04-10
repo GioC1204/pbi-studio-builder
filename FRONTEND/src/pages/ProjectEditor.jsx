@@ -32,20 +32,22 @@ const ProjectEditor = () => {
 
   if (!project) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400" />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#FAFAFA' }}>
+        <div className="w-10 h-10 rounded-full border-2 border-yellow-400 border-t-transparent animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="flex flex-col h-screen overflow-hidden" style={{ background: '#F4F4F5' }}>
       <Header projectName={project.name} />
-      <div className="flex">
-        <Sidebar currentModule={currentModule} modules={project.modules} />
-        <main className="flex-1 p-8">
-          <ProgressBar current={currentModule} total={6} modules={project.modules} />
-          <div className="mt-6">
+
+      <div className="flex flex-1 min-h-0">
+        <Sidebar />
+
+        <main className="flex-1 overflow-y-auto p-6">
+          <ProgressBar modules={project.modules} current={currentModule} />
+          <div className="mt-5">
             <ActiveModule />
           </div>
         </main>
