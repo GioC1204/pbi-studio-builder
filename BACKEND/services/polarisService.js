@@ -80,9 +80,16 @@ function buildDaxFormula(kpi) {
 }
 
 async function generateSemanticModel(config, dir) {
-  const modelDir = path.join(dir, `${config.project_name}.SemanticModel`, 'definition');
+  const smDir  = path.join(dir, `${config.project_name}.SemanticModel`);
+  const modelDir = path.join(smDir, 'definition');
   fs.mkdirSync(modelDir, { recursive: true });
   fs.mkdirSync(path.join(modelDir, 'tables'), { recursive: true });
+
+  // definition.pbism — required for PBI Desktop to recognise the semantic model
+  fs.writeFileSync(path.join(smDir, 'definition.pbism'), JSON.stringify({ version: '4.2', settings: {} }, null, 2));
+
+  // database.tmdl — required compatibility level declaration
+  fs.writeFileSync(path.join(modelDir, 'database.tmdl'), 'database\n\tcompatibilityLevel: 1600\n');
 
   const tables = config.module1?.tables || [];
   const kpis = config.module3?.kpis || [];
@@ -90,16 +97,22 @@ async function generateSemanticModel(config, dir) {
   // Identify the fact table (first one marked as fact, or first table)
   const factTable = tables.find((t) => t.is_fact_table) || tables[0];
 
-  // model.tmdl
+  // model.tmdl — boolean properties have no ": true" in TMDL syntax
   const culture = config.module6?.language === 'en' ? 'en-US' : 'es-ES';
-  const modelTmdl = `model Model\n\tculture: ${culture}\n\tdataAccessOptions\n\t\tlegacyRedirects: true\n\t\treturnErrorValuesAsNull: true\n`;
+  const refTables = tables.map((t) => `ref table ${t.name}`).join('\n');
+  const modelTmdl = `model Model\n\tculture: ${culture}\n\tdefaultPowerBIDataSourceVersion: powerBI_V3\n\tdataAccessOptions\n\t\tlegacyRedirects\n\t\treturnErrorValuesAsNull\n${refTables ? '\n' + refTables + '\n' : ''}`;
   fs.writeFileSync(path.join(modelDir, 'model.tmdl'), modelTmdl);
 
   // One .tmdl per table
   for (const table of tables) {
+    const summarizeByFor = (type) =>
+      ['integer', 'decimal'].includes(type) ? 'sum' : 'none';
+
     const columns = (table.columns || [])
-      .map((c) => `\tcolumn ${c.name}\n\t\tdataType: ${mapType(c.type)}`)
-      .join('\n');
+      .map((c) =>
+        `\tcolumn ${c.name}\n\t\tdataType: ${mapType(c.type)}\n\t\tsummarizeBy: ${summarizeByFor(c.type)}\n\t\tsourceColumn: ${c.name}`
+      )
+      .join('\n\n');
 
     // Attach all measures to the fact table only
     let measuresBlock = '';
@@ -113,24 +126,35 @@ async function generateSemanticModel(config, dir) {
             : '';
           return `\tmeasure ${kpi.name} = ${formula}${formatStr}`;
         })
-        .join('\n');
-      measuresBlock = measureLines ? `\n${measureLines}` : '';
+        .join('\n\n');
+      measuresBlock = measureLines ? `\n\n${measureLines}` : '';
     }
 
-    const tmdl = `table ${table.name}\n${columns}${measuresBlock}\n`;
+    const tmdl = `table ${table.name}\n\n${columns}${measuresBlock}\n`;
     fs.writeFileSync(path.join(modelDir, 'tables', `${table.name}.tmdl`), tmdl);
   }
 }
 
 async function generateReport(config, dir) {
+  const crypto = require('crypto');
   const definitionDir = path.join(dir, `${config.project_name}.Report`, 'definition');
   fs.mkdirSync(definitionDir, { recursive: true });
 
-  // report.json — required by Power BI Desktop to link report → semantic model
+  // version.json — required by PBIR format
+  fs.writeFileSync(path.join(definitionDir, 'version.json'), JSON.stringify({
+    $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/versionMetadata/1.0.0/schema.json',
+    version: '2.0.0',
+  }, null, 2));
+
+  // report.json — links report to semantic model; use SharedResources theme format
   const reportJson = {
-    id: require('crypto').randomUUID(),
+    $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/report/3.2.0/schema.json',
     themeCollection: {
-      baseTheme: { name: 'CY24SU10', version: '5.65', type: 2 },
+      baseTheme: {
+        name: 'CY24SU10',
+        reportVersionAtImport: { visual: '5.65.0', report: '5.65.0', page: '5.65.0' },
+        type: 'SharedResources',
+      },
     },
     datasetReference: {
       byPath: { path: `../${config.project_name}.SemanticModel` },
@@ -152,30 +176,36 @@ async function generateReport(config, dir) {
     { name: 'Resumen', layout: 'executive', chart_type: 'barChart' },
   ];
 
+  // Helper: generate a random visual/page ID (20-char hex, matching PBI convention)
+  const newId = () => crypto.randomBytes(10).toString('hex');
+
   for (const page of pages) {
     const safeName = page.name.replace(/[^a-zA-Z0-9]/g, '_');
     const pageDir  = path.join(pagesDir, safeName);
-    fs.mkdirSync(pageDir, { recursive: true });
+    const visualsDir = path.join(pageDir, 'visuals');
+    fs.mkdirSync(visualsDir, { recursive: true });
 
-    // page.json — metadata only, no visuals array
+    // page.json
     fs.writeFileSync(path.join(pageDir, 'page.json'), JSON.stringify({
+      $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json',
       name: safeName,
       displayName: page.name,
+      displayOption: 'FitToPage',
       width: 1280,
       height: 720,
-      background: {},
-      wallpaper: {},
     }, null, 2));
 
     if (!factTable || kpis.length === 0) continue;
 
-    // KPI card visuals (up to 3 across the top)
+    // KPI card visuals — each in its own visuals/{id}/visual.json
     const kpiCount = Math.min(kpis.length, 3);
     for (let i = 0; i < kpiCount; i++) {
       const kpi = kpis[i];
+      const vid = newId();
       const visual = {
-        name: `kpi_card_${i}`,
-        position: { x: 20 + i * 300, y: 20, z: 1000, height: 100, width: 280, tabOrder: i * 1000 },
+        $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.7.0/schema.json',
+        name: vid,
+        position: { x: 20 + i * 420, y: 20, z: 1000, height: 100, width: 400, tabOrder: i * 1000 },
         visual: {
           visualType: 'card',
           query: {
@@ -196,13 +226,17 @@ async function generateReport(config, dir) {
           title: { show: true, text: kpi.name },
         },
       };
-      fs.writeFileSync(path.join(pageDir, `kpi_card_${i}.json`), JSON.stringify(visual, null, 2));
+      const vidDir = path.join(visualsDir, vid);
+      fs.mkdirSync(vidDir, { recursive: true });
+      fs.writeFileSync(path.join(vidDir, 'visual.json'), JSON.stringify(visual, null, 2));
     }
 
-    // Main chart visual (bar chart below the KPI cards)
+    // Main chart visual
     const chartType = page.chart_type || 'barChart';
+    const chartId = newId();
     const chart = {
-      name: 'main_chart',
+      $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.7.0/schema.json',
+      name: chartId,
       position: { x: 20, y: 140, z: 1000, height: 540, width: 1240, tabOrder: 10000 },
       visual: {
         visualType: chartType,
@@ -235,7 +269,9 @@ async function generateReport(config, dir) {
         title: { show: true, text: page.name },
       },
     };
-    fs.writeFileSync(path.join(pageDir, 'main_chart.json'), JSON.stringify(chart, null, 2));
+    const chartIdDir = path.join(visualsDir, chartId);
+    fs.mkdirSync(chartIdDir, { recursive: true });
+    fs.writeFileSync(path.join(chartIdDir, 'visual.json'), JSON.stringify(chart, null, 2));
   }
 }
 
@@ -258,7 +294,6 @@ async function generatePbip(config, dir) {
     version: '1.0',
     artifacts: [
       { report: { path: `${config.project_name}.Report` } },
-      { semanticModel: { path: `${config.project_name}.SemanticModel` } },
     ],
   };
   fs.writeFileSync(
