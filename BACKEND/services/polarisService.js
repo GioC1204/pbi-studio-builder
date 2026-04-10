@@ -137,8 +137,18 @@ async function generateSemanticModel(config, dir) {
 
 async function generateReport(config, dir) {
   const crypto = require('crypto');
-  const definitionDir = path.join(dir, `${config.project_name}.Report`, 'definition');
+  const reportDir    = path.join(dir, `${config.project_name}.Report`);
+  const definitionDir = path.join(reportDir, 'definition');
   fs.mkdirSync(definitionDir, { recursive: true });
+
+  // definition.pbir — REQUIRED at the root of the .Report folder (not inside definition/)
+  // Contains the PBIR format version and the link to the SemanticModel
+  fs.writeFileSync(path.join(reportDir, 'definition.pbir'), JSON.stringify({
+    version: '4.0',
+    datasetReference: {
+      byPath: { path: `../${config.project_name}.SemanticModel` },
+    },
+  }, null, 2));
 
   // version.json — required by PBIR format
   fs.writeFileSync(path.join(definitionDir, 'version.json'), JSON.stringify({
@@ -146,7 +156,7 @@ async function generateReport(config, dir) {
     version: '2.0.0',
   }, null, 2));
 
-  // report.json — links report to semantic model; use SharedResources theme format
+  // report.json — theme only; datasetReference lives in definition.pbir
   const reportJson = {
     $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/report/3.2.0/schema.json',
     themeCollection: {
@@ -155,9 +165,6 @@ async function generateReport(config, dir) {
         reportVersionAtImport: { visual: '5.65.0', report: '5.65.0', page: '5.65.0' },
         type: 'SharedResources',
       },
-    },
-    datasetReference: {
-      byPath: { path: `../${config.project_name}.SemanticModel` },
     },
   };
   fs.writeFileSync(path.join(definitionDir, 'report.json'), JSON.stringify(reportJson, null, 2));
