@@ -144,6 +144,7 @@ async function generateReport(config, dir) {
   // definition.pbir — REQUIRED at the root of the .Report folder (not inside definition/)
   // Contains the PBIR format version and the link to the SemanticModel
   fs.writeFileSync(path.join(reportDir, 'definition.pbir'), JSON.stringify({
+    $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definitionProperties/2.0.0/schema.json',
     version: '4.0',
     datasetReference: {
       byPath: { path: `../${config.project_name}.SemanticModel` },
@@ -185,6 +186,16 @@ async function generateReport(config, dir) {
 
   // Helper: generate a random visual/page ID (20-char hex, matching PBI convention)
   const newId = () => crypto.randomBytes(10).toString('hex');
+
+  // page folder names (safe, no special chars)
+  const pageFolderNames = pages.map((p) => p.name.replace(/[^a-zA-Z0-9]/g, '_'));
+
+  // pages.json — required by PBI Desktop to know page order
+  fs.writeFileSync(path.join(pagesDir, 'pages.json'), JSON.stringify({
+    $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/pagesMetadata/1.0.0/schema.json',
+    pageOrder: pageFolderNames,
+    activePageName: pageFolderNames[0] || '',
+  }, null, 2));
 
   for (const page of pages) {
     const safeName = page.name.replace(/[^a-zA-Z0-9]/g, '_');
@@ -302,6 +313,9 @@ async function generatePbip(config, dir) {
     artifacts: [
       { report: { path: `${config.project_name}.Report` } },
     ],
+    settings: {
+      enableAutoRecovery: true,
+    },
   };
   fs.writeFileSync(
     path.join(dir, `${config.project_name}.pbip`),
