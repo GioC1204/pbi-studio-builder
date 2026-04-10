@@ -413,7 +413,7 @@ const Module1DataSource = () => {
         ))}
       </div>
     </div>
-    </div>{/* end two-panel wrapper */}
+    </div>
   );
 };
 
