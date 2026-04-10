@@ -10,6 +10,8 @@ const GENERATED_PATH = process.env.GENERATED_PROJECTS_PATH || '../GENERATED-PROJ
  */
 exports.generate = async (project, emit) => {
   const projectDir = path.join(GENERATED_PATH, project.id);
+  // Clean previous generation before rebuilding
+  if (fs.existsSync(projectDir)) fs.rmSync(projectDir, { recursive: true, force: true });
   fs.mkdirSync(projectDir, { recursive: true });
 
   const config = buildConfig(project);
