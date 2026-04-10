@@ -43,9 +43,12 @@ exports.generate = async (project, emit) => {
 
 function buildConfig(project) {
   const m = project.modules || {};
+  const dashboardName = m[3]?.data?.dashboard_name || project.name || 'Nuevo Proyecto';
+  // Sanitize name for use as file/folder name (no special chars)
+  const safeName = dashboardName.replace(/[^a-zA-Z0-9 _-]/g, '').trim() || 'Dashboard';
   return {
     project_id: project.id,
-    project_name: project.name,
+    project_name: safeName,
     module1: m[1]?.data || {},
     module2: m[2]?.data || {},
     module3: m[3]?.data || {},
@@ -86,13 +89,14 @@ async function generateSemanticModel(config, dir) {
   const factTable = tables.find((t) => t.is_fact_table) || tables[0];
 
   // model.tmdl
-  const modelTmdl = `model Model\n\tculture: ${config.module6?.language === 'en' ? 'en-US' : 'es-ES'}\n`;
+  const culture = config.module6?.language === 'en' ? 'en-US' : 'es-ES';
+  const modelTmdl = `model Model\n\tculture: ${culture}\n\tdataAccessOptions\n\t\tlegacyRedirects: true\n\t\treturnErrorValuesAsNull: true\n`;
   fs.writeFileSync(path.join(modelDir, 'model.tmdl'), modelTmdl);
 
   // One .tmdl per table
   for (const table of tables) {
     const columns = (table.columns || [])
-      .map((c) => `\t\tcolumn ${c.name}\n\t\t\tdataType: ${mapType(c.type)}`)
+      .map((c) => `\tcolumn ${c.name}\n\t\tdataType: ${mapType(c.type)}`)
       .join('\n');
 
     // Attach all measures to the fact table only
@@ -101,11 +105,11 @@ async function generateSemanticModel(config, dir) {
       const measureLines = kpis
         .map((kpi) => {
           const formula = buildDaxFormula(kpi);
-          const formatStr = kpi.format === '$ Moneda' ? '\n\t\t\tformatString: "$ #,0.00"'
-            : kpi.format === '% Porcentaje' ? '\n\t\t\tformatString: "0.00%"'
-            : kpi.format === '# Número' ? '\n\t\t\tformatString: "#,0"'
+          const formatStr = kpi.format === '$ Moneda' ? '\n\t\tformatString: "$ #,0.00"'
+            : kpi.format === '% Porcentaje' ? '\n\t\tformatString: "0.00%"'
+            : kpi.format === '# Número' ? '\n\t\tformatString: "#,0"'
             : '';
-          return `\t\tmeasure '${kpi.name}' = ${formula}${formatStr}`;
+          return `\tmeasure ${kpi.name} = ${formula}${formatStr}`;
         })
         .join('\n');
       measuresBlock = measureLines ? `\n${measureLines}` : '';
@@ -156,9 +160,8 @@ async function generatePbip(config, dir) {
     version: '1.0',
     artifacts: [
       { report: { path: `${config.project_name}.Report` } },
-      { dataset: { path: `${config.project_name}.SemanticModel` } },
+      { semanticModel: { path: `${config.project_name}.SemanticModel` } },
     ],
-    settings: { enableTmdlAutoSave: true },
   };
   fs.writeFileSync(
     path.join(dir, `${config.project_name}.pbip`),
