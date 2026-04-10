@@ -241,7 +241,13 @@ async function generateReport(config, dir) {
               },
             },
           },
-          title: { show: true, text: kpi.name },
+          visualContainerObjects: {
+            title: [{
+              properties: {
+                text: { expr: { Literal: { Value: `'${kpi.name}'` } } },
+              },
+            }],
+          },
         },
       };
       const vidDir = path.join(visualsDir, vid);
@@ -284,8 +290,14 @@ async function generateReport(config, dir) {
             },
           },
         },
-        title: { show: true, text: page.name },
-      },
+          visualContainerObjects: {
+            title: [{
+              properties: {
+                text: { expr: { Literal: { Value: `'${page.name}'` } } },
+              },
+            }],
+          },
+        },
     };
     const chartIdDir = path.join(visualsDir, chartId);
     fs.mkdirSync(chartIdDir, { recursive: true });
