@@ -19,7 +19,7 @@ exports.start = async (req, res, next) => {
 
     // Validate all modules 1-6 complete
     const modules = project.modules || {};
-    const missing = [1, 2, 3, 4, 6].filter((i) => !modules[i]?.completed);
+    const missing = [1, 2, 3, 4, 5, 6].filter((i) => !modules[i]?.completed);
     if (missing.length > 0) {
       return res.status(400).json({ error: `Módulos incompletos: ${missing.join(', ')}` });
     }

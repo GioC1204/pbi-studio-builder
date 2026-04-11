@@ -55,6 +55,7 @@ function buildConfig(project) {
     module2: m[2]?.data || {},
     module3: m[3]?.data || {},
     module4: m[4]?.data || {},
+    module5: m[5]?.data || {},
     module6: m[6]?.data || {},
   };
 }
@@ -362,7 +363,7 @@ async function generateAudit(config, dir) {
     model_health: {
       tables: tables.length,
       measures: kpis.length,
-      rls_enabled: config.module4?.rls_enabled || false,
+      rls_enabled: config.module5?.rls_enabled || false,
     },
     bpa_score: bpaScore,
     bpa_violations: allViolations,
@@ -388,7 +389,7 @@ async function generateDocumentation(config, dir) {
   const version = m6.version || '1.0';
   const tables = config.module1?.tables || [];
   const measures = config.module3?.kpis || [];
-  const roles = config.module4?.roles || [];
+  const roles = config.module5?.roles || [];
   const pages = config.module4?.pages || config.module3?.pages || [];
 
   const header = (title) =>
@@ -423,7 +424,7 @@ async function generateDocumentation(config, dir) {
     fs.writeFileSync(path.join(docDir, 'measures_guide.md'), content);
   }
 
-  if (m6.generate_rls_docs && config.module4?.rls_enabled) {
+  if (m6.generate_rls_docs && config.module5?.rls_enabled) {
     let content = header(lang === 'es' ? 'Documentación de Seguridad RLS' : 'RLS Security Documentation');
     for (const role of roles) {
       content += `## Rol: ${role.name}\n\n`;
