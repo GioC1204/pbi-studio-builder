@@ -99,8 +99,7 @@ async function generateSemanticModel(config, dir) {
 
   // model.tmdl — boolean properties have no ": true" in TMDL syntax
   const culture = config.module6?.language === 'en' ? 'en-US' : 'es-ES';
-  const refTables = tables.map((t) => `ref table ${t.name}`).join('\n');
-  const modelTmdl = `model Model\n\tculture: ${culture}\n\tdefaultPowerBIDataSourceVersion: powerBI_V3\n\tdataAccessOptions\n\t\tlegacyRedirects\n\t\treturnErrorValuesAsNull\n${refTables ? '\n' + refTables + '\n' : ''}`;
+  const modelTmdl = `model Model\n\tculture: ${culture}\n\tdefaultPowerBIDataSourceVersion: powerBI_V3\n\tdataAccessOptions\n\t\tlegacyRedirects\n\t\treturnErrorValuesAsNull\n`;
   fs.writeFileSync(path.join(modelDir, 'model.tmdl'), modelTmdl);
 
   // One .tmdl per table
