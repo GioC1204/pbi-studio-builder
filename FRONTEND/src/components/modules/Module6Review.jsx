@@ -172,7 +172,15 @@ const Module5Review = () => {
               style={{ width: `${Math.round(progress)}%` }}
             />
           </div>
-          <p className="text-xs text-gray-400 mt-2">{Math.round(progress)}%</p>
+          <div className="flex items-center justify-between mt-2">
+            <p className="text-xs text-gray-400">{Math.round(progress)}%</p>
+            <button
+              onClick={() => { stopPolling(); setGenerating(false); setError('Generación cancelada. Puedes intentarlo de nuevo.'); }}
+              className="text-xs text-gray-400 hover:text-gray-600 underline"
+            >
+              Cancelar
+            </button>
+          </div>
         </div>
       )}
 
