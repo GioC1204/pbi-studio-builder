@@ -178,16 +178,12 @@ async function generateSemanticModel(config, dir) {
     }
 
     // Partition — every table must have one with mode: import
+    // Using single-line M expression to avoid TMDL indentation parsing issues
     const pName = `${safeTmdlFile(table.name)}-partition`;
-    const colList = (table.columns || []).map((c) => `"${c.name}"`).join(', ');
     const partition = [
       `\tpartition ${pName} = m`,
       `\t\tmode: import`,
-      `\t\tsource =`,
-      `\t\t\t\tlet`,
-      `\t\t\t\t    Source = Table.FromRows({}, {${colList}})`,
-      `\t\t\t\tin`,
-      `\t\t\t\t    Source`,
+      `\t\tsource = Table.FromRows({})`,
     ].join('\n');
 
     const tmdl = [
