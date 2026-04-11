@@ -62,6 +62,23 @@ function buildConfig(project) {
 
 // ---- Generation functions ----
 
+/**
+ * Quote a TMDL identifier if it contains spaces or special characters.
+ * TMDL requires single-quote wrapping for names with spaces, e.g. 'PESO KG'
+ */
+function tmdlName(name) {
+  if (!name) return name;
+  return /[\s\-+#%&()]/.test(name) ? `'${name.replace(/'/g, "\\'")}'` : name;
+}
+
+/**
+ * Safe filename for .tmdl files — replaces spaces/special chars.
+ * The filename doesn't need to match the TMDL identifier.
+ */
+function safeTmdlFile(name) {
+  return (name || 'table').replace(/[^a-zA-Z0-9_\-]/g, '_');
+}
+
 function buildDaxFormula(kpi) {
   if (kpi.source_field && kpi.aggregation && kpi.source_table) {
     const col = `'${kpi.source_table}'[${kpi.source_field}]`;
@@ -110,7 +127,7 @@ async function generateSemanticModel(config, dir) {
 
     const columns = (table.columns || [])
       .map((c) =>
-        `\tcolumn ${c.name}\n\t\tdataType: ${mapType(c.type)}\n\t\tsummarizeBy: ${summarizeByFor(c.type)}\n\t\tsourceColumn: ${c.name}`
+        `\tcolumn ${tmdlName(c.name)}\n\t\tdataType: ${mapType(c.type)}\n\t\tsummarizeBy: ${summarizeByFor(c.type)}\n\t\tsourceColumn: ${tmdlName(c.name)}`
       )
       .join('\n\n');
 
@@ -124,14 +141,14 @@ async function generateSemanticModel(config, dir) {
             : kpi.format === '% Porcentaje' ? '\n\t\tformatString: "0.00%"'
             : kpi.format === '# Número' ? '\n\t\tformatString: "#,0"'
             : '';
-          return `\tmeasure ${kpi.name} = ${formula}${formatStr}`;
+          return `\tmeasure ${tmdlName(kpi.name)} = ${formula}${formatStr}`;
         })
         .join('\n\n');
       measuresBlock = measureLines ? `\n\n${measureLines}` : '';
     }
 
-    const tmdl = `table ${table.name}\n\n${columns}${measuresBlock}\n`;
-    fs.writeFileSync(path.join(modelDir, 'tables', `${table.name}.tmdl`), tmdl);
+    const tmdl = `table ${tmdlName(table.name)}\n\n${columns}${measuresBlock}\n`;
+    fs.writeFileSync(path.join(modelDir, 'tables', `${safeTmdlFile(table.name)}.tmdl`), tmdl);
   }
 }
 
