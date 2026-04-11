@@ -80,6 +80,30 @@ function safeTmdlFile(name) {
 }
 
 /**
+ * Map a TMDL column type to an M type annotation for Table.FromRows type table.
+ * Without explicit types, Table.FromRows creates "type any" columns and DAX
+ * treats numeric columns as strings, breaking SUM/AVERAGE measures.
+ */
+function mType(colType) {
+  const map = {
+    date:    'nullable datetime',
+    integer: 'nullable Int64.Type',
+    decimal: 'nullable number',
+    text:    'nullable text',
+    boolean: 'nullable logical',
+  };
+  return map[colType] || 'nullable text';
+}
+
+/**
+ * M identifier — wrap in #"..." if name contains spaces or special chars.
+ */
+function mIdentifier(name) {
+  if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name)) return name;
+  return `#"${name.replace(/"/g, '""')}"`;
+}
+
+/**
  * Format a value for use inside an M expression literal.
  * - null/undefined → null
  * - Date objects → ISO date string "YYYY-MM-DD"
@@ -211,6 +235,12 @@ async function generateSemanticModel(config, dir) {
       })
       .join(',\n');
     // Build the M source block (each line at 3-tab base = inside "source =" block)
+    // type table spec — tells PBI which columns are numbers vs text vs datetime
+    // Without this, Table.FromRows defaults to "type any" → DAX SUM fails on strings
+    const typeTableSpec = (table.columns || [])
+      .map((c) => `${mIdentifier(c.name)} = ${mType(c.type)}`)
+      .join(', ');
+
     let mLines;
     if (sampleRows.length > 0) {
       mLines = [
@@ -219,7 +249,7 @@ async function generateSemanticModel(config, dir) {
         `${T.repeat(5)}{`,
         rowLines,
         `${T.repeat(5)}},`,
-        `${T.repeat(5)}{${colNames}}`,
+        `${T.repeat(5)}type table [${typeTableSpec}]`,
         `${T.repeat(4)})`,
         `${T.repeat(3)}in`,
         `${T.repeat(4)}Source`,
@@ -227,7 +257,7 @@ async function generateSemanticModel(config, dir) {
     } else {
       mLines = [
         `${T.repeat(3)}let`,
-        `${T.repeat(4)}Source = Table.FromRows({}, {${colNames}})`,
+        `${T.repeat(4)}Source = Table.FromRows({}, type table [${typeTableSpec}])`,
         `${T.repeat(3)}in`,
         `${T.repeat(4)}Source`,
       ].join('\n');
