@@ -196,9 +196,13 @@ const Module5Review = () => {
               <li>Descarga el archivo ZIP</li>
               <li><strong>Extrae el ZIP</strong> a una carpeta (clic derecho → Extraer todo)</li>
               <li>Dentro de la carpeta extraída, abre el archivo <strong>.pbip</strong></li>
+              <li>En Power BI Desktop: <strong>Inicio → Actualizar</strong> para cargar los datos de muestra</li>
             </ol>
             <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-2 py-1 mt-2">
               No abras el .pbip directamente desde el ZIP — Power BI no puede resolver las rutas relativas dentro de un archivo comprimido.
+            </p>
+            <p className="text-xs text-blue-600 bg-blue-50 border border-blue-200 rounded px-2 py-1">
+              El formato PBIP/TMDL separa la estructura del modelo de los datos. El paso "Actualizar" carga los datos de muestra incluidos en la partición.
             </p>
           </div>
           <div className="flex gap-3">

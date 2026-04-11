@@ -197,25 +197,46 @@ async function generateSemanticModel(config, dir) {
       measuresBlock = measureLines ? `\n\n${measureLines}` : '';
     }
 
-    // Partition — embed sample_rows from module 1 so PBI Desktop shows real data.
-    // #table({col names}, {{row1 values}, {row2 values}, ...})
+    // Partition — embed sample_rows so PBI Desktop loads data on Refresh.
+    // Use let...in + Table.FromRows (same pattern PBI Desktop "Enter Data" produces).
+    // TMDL indentation: partition=1tab, mode/source=2tabs, M block content=3tabs.
     const pName = `${safeTmdlFile(table.name)}-partition`;
-    const colList = (table.columns || []).map((c) => `"${c.name.replace(/"/g, '""')}"`).join(', ');
+    const colNames = (table.columns || []).map((c) => `"${c.name.replace(/"/g, '""')}"`).join(', ');
     const sampleRows = table.sample_rows || [];
-    const rowsM = sampleRows
+    const T = '\t'; // shorthand
+    const rowLines = sampleRows
       .map((row) => {
         const vals = (table.columns || []).map((_, i) => mValue(row[i]));
-        return `{${vals.join(', ')}}`;
+        return `${T.repeat(6)}{${vals.join(', ')}}`;
       })
-      .join(', ');
-    // TMDL rules:
-    // 1. Identifiers with hyphens must be single-quoted
-    // 2. M expression source must start on the next line (indented 3 tabs)
+      .join(',\n');
+    // Build the M source block (each line at 3-tab base = inside "source =" block)
+    let mLines;
+    if (sampleRows.length > 0) {
+      mLines = [
+        `${T.repeat(3)}let`,
+        `${T.repeat(4)}Source = Table.FromRows(`,
+        `${T.repeat(5)}{`,
+        rowLines,
+        `${T.repeat(5)}},`,
+        `${T.repeat(5)}{${colNames}}`,
+        `${T.repeat(4)})`,
+        `${T.repeat(3)}in`,
+        `${T.repeat(4)}Source`,
+      ].join('\n');
+    } else {
+      mLines = [
+        `${T.repeat(3)}let`,
+        `${T.repeat(4)}Source = Table.FromRows({}, {${colNames}})`,
+        `${T.repeat(3)}in`,
+        `${T.repeat(4)}Source`,
+      ].join('\n');
+    }
     const partition = [
-      `\tpartition ${tmdlName(pName)} = m`,
-      `\t\tmode: import`,
-      `\t\tsource =`,
-      `\t\t\t#table({${colList}}, {${rowsM}})`,
+      `${T}partition ${tmdlName(pName)} = m`,
+      `${T.repeat(2)}mode: import`,
+      `${T.repeat(2)}source =`,
+      mLines,
     ].join('\n');
 
     const tmdl = [
