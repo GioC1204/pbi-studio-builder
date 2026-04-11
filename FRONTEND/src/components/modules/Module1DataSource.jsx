@@ -5,7 +5,7 @@ import api from '../../services/api';
 import { Database, Upload, Cloud, Plug, Check, ClipboardList } from 'lucide-react';
 
 // ── Type inference ────────────────────────────────
-function inferType(values) {
+function inferType(values, rawStrings) {
   const nonNull = values.filter((v) => v !== undefined && v !== null && v !== '');
   if (nonNull.length === 0) return 'text';
   // XLSX with cellDates:true returns Date objects for date columns — check first
@@ -13,8 +13,14 @@ function inferType(values) {
   // String date patterns (ISO, DD/MM/YYYY, MM-DD-YYYY)
   const dateRe = /^\d{4}-\d{2}-\d{2}|^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}/;
   if (nonNull.every((v) => dateRe.test(String(v)))) return 'date';
-  if (nonNull.every((v) => !isNaN(Number(v)) && Number.isInteger(Number(v)))) return 'integer';
-  if (nonNull.every((v) => !isNaN(Number(v)))) return 'decimal';
+  if (nonNull.every((v) => !isNaN(Number(v)))) {
+    // Check raw string values for decimal point — Number.isInteger(1200.00) is true
+    // so we must look at the original text to distinguish integer from decimal
+    const raws = (rawStrings || []).filter((s) => s !== undefined && s !== null && s !== '');
+    const hasDecimalPoint = raws.some((s) => /[.,]\d+$/.test(String(s)));
+    if (!hasDecimalPoint && nonNull.every((v) => Number.isInteger(Number(v)))) return 'integer';
+    return 'decimal';
+  }
   return 'text';
 }
 
@@ -204,13 +210,22 @@ const Module1DataSource = () => {
     setPreview(null);
     setParsing(true);
 
+    const isCsv = file.name.toLowerCase().endsWith('.csv');
     const reader = new FileReader();
     reader.onload = (ev) => {
       try {
-        const wb = XLSX.read(ev.target.result, { type: 'array', cellDates: true });
+        let wb;
+        if (isCsv) {
+          // CSV: read as UTF-8 text to preserve accented characters
+          wb = XLSX.read(ev.target.result, { type: 'string', cellDates: true });
+        } else {
+          wb = XLSX.read(ev.target.result, { type: 'array', cellDates: true });
+        }
         const sheetName = wb.SheetNames[0];
         const ws = wb.Sheets[sheetName];
         const jsonData = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
+        // Raw string values (no type coercion) — used for decimal detection
+        const rawData = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null, raw: false });
 
         if (jsonData.length < 2) {
           setParsing(false);
@@ -219,13 +234,15 @@ const Module1DataSource = () => {
 
         const headers = jsonData[0].map((h) => String(h ?? '').trim());
         const dataRows = jsonData.slice(1).filter((r) => r.some((v) => v !== null));
+        const rawRows = rawData.slice(1).filter((r) => r.some((v) => v !== null));
         const sampleRows = dataRows.slice(0, 5);
 
         // Detect column types from all available data rows (up to 50)
         const typeRows = dataRows.slice(0, 50);
+        const rawTypeRows = rawRows.slice(0, 50);
         const columns = headers.map((h, i) => ({
           name: h,
-          type: inferType(typeRows.map((r) => r[i])),
+          type: inferType(typeRows.map((r) => r[i]), rawTypeRows.map((r) => r[i])),
           description: '',
         }));
 
@@ -255,7 +272,11 @@ const Module1DataSource = () => {
         setParsing(false);
       }
     };
-    reader.readAsArrayBuffer(file);
+    if (isCsv) {
+      reader.readAsText(file, 'UTF-8');
+    } else {
+      reader.readAsArrayBuffer(file);
+    }
   };
 
   const handleSave = () => {
@@ -437,7 +458,7 @@ const Module1DataSource = () => {
           { label: 'Tablas',           val: tables.length > 0 ? `${tables.length} detectadas` : '—', color: '#F2C811' },
           { label: 'Tabla de hechos',  val: factTable?.name || '—', color: '#60A5FA' },
           { label: 'Dimensiones',      val: dims.length > 0 ? dims.map((d) => d.name).join(' · ') : '—', color: '#60A5FA' },
-          { label: 'Relaciones',       val: dims.length > 0 ? `${dims.length} definida${dims.length !== 1 ? 's' : ''}` : '—', color: '#F2C811' },
+          { label: 'Relaciones',       val: factTable && dims.length > 0 ? `${dims.length} definida${dims.length !== 1 ? 's' : ''}` : '—', color: '#F2C811' },
           { label: 'Tabla de fechas',  val: tables.some((t) => /date|fecha/i.test(t.name)) ? '✓ Auto-generada' : '—',
             color: tables.some((t) => /date|fecha/i.test(t.name)) ? '#34D399' : '#64748B' },
         ].map(({ label, val, color }) => (
