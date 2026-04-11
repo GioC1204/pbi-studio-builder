@@ -145,7 +145,7 @@ async function generateReport(config, dir) {
   // Contains the PBIR format version and the link to the SemanticModel
   fs.writeFileSync(path.join(reportDir, 'definition.pbir'), JSON.stringify({
     $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definitionProperties/2.0.0/schema.json',
-    version: '4.0',
+    version: '1.0',
     datasetReference: {
       byPath: { path: `../${config.project_name}.SemanticModel` },
     },

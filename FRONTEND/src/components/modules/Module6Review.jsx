@@ -184,15 +184,28 @@ const Module5Review = () => {
       )}
 
       {completed && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
-          <div className="text-4xl mb-3">🎉</div>
-          <h3 className="font-bold text-green-800 mb-2">¡Dashboard generado con éxito!</h3>
-          <p className="text-sm text-green-600 mb-4">Tu archivo .pbip está listo para descargar.</p>
+        <div className="bg-green-50 border border-green-200 rounded-xl p-6">
+          <div className="text-center mb-4">
+            <div className="text-4xl mb-3">🎉</div>
+            <h3 className="font-bold text-green-800 mb-1">¡Dashboard generado con éxito!</h3>
+            <p className="text-sm text-green-600">Tu archivo .pbip está listo para descargar.</p>
+          </div>
+          <div className="bg-white border border-green-200 rounded-lg p-4 mb-4 space-y-2">
+            <p className="text-xs font-semibold text-gray-700">Para abrir en Power BI Desktop:</p>
+            <ol className="text-xs text-gray-600 space-y-1 list-decimal list-inside">
+              <li>Descarga el archivo ZIP</li>
+              <li><strong>Extrae el ZIP</strong> a una carpeta (clic derecho → Extraer todo)</li>
+              <li>Dentro de la carpeta extraída, abre el archivo <strong>.pbip</strong></li>
+            </ol>
+            <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-2 py-1 mt-2">
+              No abras el .pbip directamente desde el ZIP — Power BI no puede resolver las rutas relativas dentro de un archivo comprimido.
+            </p>
+          </div>
           <button
             onClick={handleDownload}
-            className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2.5 rounded-lg text-sm"
+            className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2.5 rounded-lg text-sm"
           >
-            Descargar .pbip
+            Descargar ZIP
           </button>
         </div>
       )}
