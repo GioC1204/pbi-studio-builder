@@ -79,6 +79,19 @@ function safeTmdlFile(name) {
   return (name || 'table').replace(/[^a-zA-Z0-9_\-]/g, '_');
 }
 
+/**
+ * Format a value for use inside an M expression literal.
+ * - null/undefined → null
+ * - numbers → as-is
+ * - strings → double-quoted, with internal double-quotes escaped as ""
+ */
+function mValue(v) {
+  if (v === null || v === undefined) return 'null';
+  if (typeof v === 'boolean') return v ? 'true' : 'false';
+  if (typeof v === 'number') return String(v);
+  return `"${String(v).replace(/"/g, '""')}"`;
+}
+
 function buildDaxFormula(kpi) {
   if (kpi.source_field && kpi.aggregation && kpi.source_table) {
     const col = `'${kpi.source_table}'[${kpi.source_field}]`;
@@ -177,15 +190,21 @@ async function generateSemanticModel(config, dir) {
       measuresBlock = measureLines ? `\n\n${measureLines}` : '';
     }
 
-    // Partition — every table must have one with mode: import
-    // #table({col names}, {}) creates an empty table with the correct schema
-    // so DAX measures can resolve column references without Missing_References errors
+    // Partition — embed sample_rows from module 1 so PBI Desktop shows real data.
+    // #table({col names}, {{row1 values}, {row2 values}, ...})
     const pName = `${safeTmdlFile(table.name)}-partition`;
-    const colList = (table.columns || []).map((c) => `"${c.name}"`).join(', ');
+    const colList = (table.columns || []).map((c) => `"${c.name.replace(/"/g, '""')}"`).join(', ');
+    const sampleRows = table.sample_rows || [];
+    const rowsM = sampleRows
+      .map((row) => {
+        const vals = (table.columns || []).map((_, i) => mValue(row[i]));
+        return `{${vals.join(', ')}}`;
+      })
+      .join(', ');
     const partition = [
       `\tpartition ${pName} = m`,
       `\t\tmode: import`,
-      `\t\tsource = #table({${colList}}, {})`,
+      `\t\tsource = #table({${colList}}, {${rowsM}})`,
     ].join('\n');
 
     const tmdl = [
