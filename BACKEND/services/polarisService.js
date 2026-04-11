@@ -82,12 +82,19 @@ function safeTmdlFile(name) {
 /**
  * Format a value for use inside an M expression literal.
  * - null/undefined → null
+ * - Date objects → ISO date string "YYYY-MM-DD"
  * - numbers → as-is
  * - strings → double-quoted, with internal double-quotes escaped as ""
  */
 function mValue(v) {
   if (v === null || v === undefined) return 'null';
   if (typeof v === 'boolean') return v ? 'true' : 'false';
+  if (v instanceof Date && !isNaN(v.getTime())) {
+    const y = v.getFullYear();
+    const m = String(v.getMonth() + 1).padStart(2, '0');
+    const d = String(v.getDate()).padStart(2, '0');
+    return `"${y}-${m}-${d}"`;
+  }
   if (typeof v === 'number') return String(v);
   return `"${String(v).replace(/"/g, '""')}"`;
 }
@@ -139,8 +146,8 @@ async function generateSemanticModel(config, dir) {
     `\tdefaultPowerBIDataSourceVersion: powerBI_V3`,
     `\tsourceQueryCulture: es-CO`,
     `\tdataAccessOptions`,
-    `\t\tlegacyRedirects`,
-    `\t\treturnErrorValuesAsNull`,
+    `\t\tlegacyRedirects: true`,
+    `\t\treturnErrorValuesAsNull: true`,
     ``,
     refTables,
     ``,
@@ -201,10 +208,14 @@ async function generateSemanticModel(config, dir) {
         return `{${vals.join(', ')}}`;
       })
       .join(', ');
+    // TMDL rules:
+    // 1. Identifiers with hyphens must be single-quoted
+    // 2. M expression source must start on the next line (indented 3 tabs)
     const partition = [
-      `\tpartition ${pName} = m`,
+      `\tpartition ${tmdlName(pName)} = m`,
       `\t\tmode: import`,
-      `\t\tsource = #table({${colList}}, {${rowsM}})`,
+      `\t\tsource =`,
+      `\t\t\t#table({${colList}}, {${rowsM}})`,
     ].join('\n');
 
     const tmdl = [
