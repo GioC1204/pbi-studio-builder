@@ -147,7 +147,20 @@ async function generateSemanticModel(config, dir) {
       measuresBlock = measureLines ? `\n\n${measureLines}` : '';
     }
 
-    const tmdl = `table ${tmdlName(table.name)}\n\n${columns}${measuresBlock}\n`;
+    // Every table requires at least one partition with mode: import (Full DataView)
+    const pName = safeTmdlFile(table.name) + '-partition';
+    const colSchema = (table.columns || []).map((c) => `"${c.name}"`).join(', ');
+    const partition = [
+      `\tpartition ${pName} = m`,
+      `\t\tmode: import`,
+      `\t\tsource =`,
+      `\t\t\tlet`,
+      `\t\t\t\tSource = Table.FromRows({}, {${colSchema}})`,
+      `\t\t\tin`,
+      `\t\t\t\tSource`,
+    ].join('\n');
+
+    const tmdl = `table ${tmdlName(table.name)}\n\n${partition}\n\n${columns}${measuresBlock}\n`;
     fs.writeFileSync(path.join(modelDir, 'tables', `${safeTmdlFile(table.name)}.tmdl`), tmdl);
   }
 }

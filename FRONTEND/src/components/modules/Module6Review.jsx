@@ -201,21 +201,12 @@ const Module5Review = () => {
               No abras el .pbip directamente desde el ZIP — Power BI no puede resolver las rutas relativas dentro de un archivo comprimido.
             </p>
           </div>
-          <div className="flex gap-3">
-            <button
-              onClick={handleDownload}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2.5 rounded-lg text-sm"
-            >
-              Descargar ZIP
-            </button>
-            <button
-              onClick={() => { setCompleted(false); setProgress(0); setError(null); setCurrentStep(''); }}
-              className="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-700 border border-gray-200 hover:border-gray-300 bg-white transition-colors"
-              title="Volver a generar con los mismos datos"
-            >
-              Regenerar
-            </button>
-          </div>
+          <button
+            onClick={handleDownload}
+            className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2.5 rounded-lg text-sm"
+          >
+            Descargar ZIP
+          </button>
         </div>
       )}
     </div>
