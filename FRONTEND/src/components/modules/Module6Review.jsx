@@ -78,7 +78,6 @@ const Module5Review = () => {
     setError(null);
     setCurrentStep('Iniciando generación...');
     try {
-      await saveModule(7, { confirmed: true, notes: '' });
       await api.post(`/projects/${project.id}/generate`);
       setCurrentStep('Generando tu dashboard...');
       startFakeProgress();
