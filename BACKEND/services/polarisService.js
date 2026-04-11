@@ -98,40 +98,67 @@ function buildDaxFormula(kpi) {
 }
 
 async function generateSemanticModel(config, dir) {
+  const crypto = require('crypto');
+  const newGuid = () => crypto.randomUUID();
+
   const smDir  = path.join(dir, `${config.project_name}.SemanticModel`);
   const modelDir = path.join(smDir, 'definition');
   fs.mkdirSync(modelDir, { recursive: true });
   fs.mkdirSync(path.join(modelDir, 'tables'), { recursive: true });
 
-  // definition.pbism — required for PBI Desktop to recognise the semantic model
+  // definition.pbism — version 4.2 enables TMDL format
   fs.writeFileSync(path.join(smDir, 'definition.pbism'), JSON.stringify({ version: '4.2', settings: {} }, null, 2));
 
-  // database.tmdl — required compatibility level declaration
+  // database.tmdl
   fs.writeFileSync(path.join(modelDir, 'database.tmdl'), 'database\n\tcompatibilityLevel: 1600\n');
 
   const tables = config.module1?.tables || [];
   const kpis = config.module3?.kpis || [];
-
-  // Identify the fact table (first one marked as fact, or first table)
+  const relationships = config.module1?.relationships || [];
   const factTable = tables.find((t) => t.is_fact_table) || tables[0];
 
-  // model.tmdl — boolean properties have no ": true" in TMDL syntax
+  // model.tmdl — matches PBI Desktop output exactly
   const culture = config.module6?.language === 'en' ? 'en-US' : 'es-ES';
-  const modelTmdl = `model Model\n\tculture: ${culture}\n\tdefaultPowerBIDataSourceVersion: powerBI_V3\n\tdataAccessOptions\n\t\tlegacyRedirects\n\t\treturnErrorValuesAsNull\n`;
+  const refTables = tables.map((t) => `ref table ${tmdlName(t.name)}`).join('\n');
+  const modelTmdl = [
+    `model Model`,
+    `\tculture: ${culture}`,
+    `\tdefaultPowerBIDataSourceVersion: powerBI_V3`,
+    `\tsourceQueryCulture: es-CO`,
+    `\tdataAccessOptions`,
+    `\t\tlegacyRedirects`,
+    `\t\treturnErrorValuesAsNull`,
+    ``,
+    refTables,
+    ``,
+  ].join('\n');
   fs.writeFileSync(path.join(modelDir, 'model.tmdl'), modelTmdl);
 
-  // One .tmdl per table
+  // relationships.tmdl — required file even if empty
+  const relLines = relationships.map((r) =>
+    `relationship ${newGuid()}\n\tfromColumn: ${tmdlName(r.from_table)}.${tmdlName(r.from_column)}\n\ttoColumn: ${tmdlName(r.to_table)}.${tmdlName(r.to_column)}\n`
+  ).join('\n');
+  fs.writeFileSync(path.join(modelDir, 'relationships.tmdl'), relLines || '');
+
+  // One .tmdl file per table — matching PBI Desktop structure
   for (const table of tables) {
+    const tableGuid = newGuid();
     const summarizeByFor = (type) =>
       ['integer', 'decimal'].includes(type) ? 'sum' : 'none';
 
     const columns = (table.columns || [])
-      .map((c) =>
-        `\tcolumn ${tmdlName(c.name)}\n\t\tdataType: ${mapType(c.type)}\n\t\tsummarizeBy: ${summarizeByFor(c.type)}\n\t\tsourceColumn: ${tmdlName(c.name)}`
-      )
+      .map((c) => [
+        `\tcolumn ${tmdlName(c.name)}`,
+        `\t\tdataType: ${mapType(c.type)}`,
+        `\t\tlineageTag: ${newGuid()}`,
+        `\t\tsummarizeBy: ${summarizeByFor(c.type)}`,
+        `\t\tsourceColumn: ${tmdlName(c.name)}`,
+        ``,
+        `\t\tannotation SummarizationSetBy = Automatic`,
+      ].join('\n'))
       .join('\n\n');
 
-    // Attach all measures to the fact table only
+    // Measures — attached to fact table only
     let measuresBlock = '';
     if (factTable && table.name === factTable.name) {
       const measureLines = kpis
@@ -141,41 +168,56 @@ async function generateSemanticModel(config, dir) {
             : kpi.format === '% Porcentaje' ? '\n\t\tformatString: "0.00%"'
             : kpi.format === '# Número' ? '\n\t\tformatString: "#,0"'
             : '';
-          return `\tmeasure ${tmdlName(kpi.name)} = ${formula}${formatStr}`;
+          return [
+            `\tmeasure ${tmdlName(kpi.name)} = ${formula}`,
+            `\t\tlineageTag: ${newGuid()}${formatStr}`,
+          ].join('\n');
         })
         .join('\n\n');
       measuresBlock = measureLines ? `\n\n${measureLines}` : '';
     }
 
-    // Every table requires at least one partition with mode: import (Full DataView)
-    const pName = safeTmdlFile(table.name) + '-partition';
-    const colSchema = (table.columns || []).map((c) => `"${c.name}"`).join(', ');
+    // Partition — every table must have one with mode: import
+    const pName = `${safeTmdlFile(table.name)}-partition`;
+    const colList = (table.columns || []).map((c) => `"${c.name}"`).join(', ');
     const partition = [
       `\tpartition ${pName} = m`,
       `\t\tmode: import`,
       `\t\tsource =`,
-      `\t\t\tlet`,
-      `\t\t\t\tSource = Table.FromRows({}, {${colSchema}})`,
-      `\t\t\tin`,
-      `\t\t\t\tSource`,
+      `\t\t\t\tlet`,
+      `\t\t\t\t    Source = Table.FromRows({}, {${colList}})`,
+      `\t\t\t\tin`,
+      `\t\t\t\t    Source`,
     ].join('\n');
 
-    const tmdl = `table ${tmdlName(table.name)}\n\n${partition}\n\n${columns}${measuresBlock}\n`;
+    const tmdl = [
+      `table ${tmdlName(table.name)}`,
+      `\tlineageTag: ${tableGuid}`,
+      ``,
+      partition,
+      ``,
+      columns,
+      measuresBlock,
+      ``,
+      `\tannotation PBI_ResultType = Table`,
+      ``,
+    ].join('\n');
+
     fs.writeFileSync(path.join(modelDir, 'tables', `${safeTmdlFile(table.name)}.tmdl`), tmdl);
   }
 }
 
 async function generateReport(config, dir) {
-  const crypto = require('crypto');
+  const crypto = require('crypto'); // used for visual/page IDs
   const reportDir    = path.join(dir, `${config.project_name}.Report`);
   const definitionDir = path.join(reportDir, 'definition');
   fs.mkdirSync(definitionDir, { recursive: true });
 
   // definition.pbir — REQUIRED at the root of the .Report folder (not inside definition/)
   // Contains the PBIR format version and the link to the SemanticModel
+  // definition.pbir — version 4.0, no $schema (matches PBI Desktop native output)
   fs.writeFileSync(path.join(reportDir, 'definition.pbir'), JSON.stringify({
-    $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definitionProperties/2.0.0/schema.json',
-    version: '1.0',
+    version: '4.0',
     datasetReference: {
       byPath: { path: `../${config.project_name}.SemanticModel` },
     },
