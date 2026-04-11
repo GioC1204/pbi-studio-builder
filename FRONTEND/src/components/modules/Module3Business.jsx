@@ -219,7 +219,7 @@ const KpiCard = ({ kpi, availableColumns, onChange, onRemove }) => {
 
 // ── Main Component ────────────────────────────────
 const Module3Business = () => {
-  const { project, saveModule } = useProject();
+  const { project, saveModule, goBack } = useProject();
   const defaults = project?.modules?.[3]?.data || {};
 
   const [dashboardName, setDashboardName] = useState(defaults.dashboard_name || '');
@@ -314,13 +314,18 @@ const Module3Business = () => {
           onChange={(f, v) => updateKpi(kpi.id, f, v)} onRemove={() => removeKpi(kpi.id)} />
       ))}
 
-      <button
-        onClick={() => saveModule(3, { dashboard_name: dashboardName, kpis })}
-        disabled={kpis.length === 0 || !dashboardName.trim()}
-        className="btn-primary mt-4"
-      >
-        Guardar y continuar →
-      </button>
+      <div className="flex items-center gap-3 mt-4">
+        <button onClick={goBack} className="btn-secondary text-sm">
+          ← Anterior
+        </button>
+        <button
+          onClick={() => saveModule(3, { dashboard_name: dashboardName, kpis })}
+          disabled={kpis.length === 0 || !dashboardName.trim()}
+          className="btn-primary"
+        >
+          Guardar y continuar →
+        </button>
+      </div>
     </div>
   );
 };

@@ -42,7 +42,7 @@ const DOCUMENTS = [
 ];
 
 const Module6Documentation = () => {
-  const { project, saveModule } = useProject();
+  const { project, saveModule, goBack } = useProject();
   const defaults = project?.modules?.[6]?.data || {};
 
   const [config, setConfig] = useState({
@@ -165,12 +165,20 @@ const Module6Documentation = () => {
         </div>
       )}
 
-      <button
-        onClick={() => saveModule(6, config)}
-        className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold px-6 py-2.5 rounded-lg text-sm"
-      >
-        Guardar y revisar →
-      </button>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={goBack}
+          className="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-700 border border-gray-200 hover:border-gray-300 bg-white transition-colors"
+        >
+          ← Anterior
+        </button>
+        <button
+          onClick={() => saveModule(6, config)}
+          className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold px-6 py-2.5 rounded-lg text-sm"
+        >
+          Guardar y continuar →
+        </button>
+      </div>
     </div>
   );
 };

@@ -83,8 +83,8 @@ const ProfileCard = ({ profile, criterion, idx, onChange, onRemove }) => (
 );
 
 const Module4Security = () => {
-  const { project, saveModule } = useProject();
-  const defaults = project?.modules?.[4]?.data || {};
+  const { project, saveModule, goBack } = useProject();
+  const defaults = project?.modules?.[5]?.data || {};
 
   const [accessType, setAccessType] = useState(defaults.access_type || 'all');
   const [criterion, setCriterion] = useState(defaults.criterion || 'Región');
@@ -117,7 +117,7 @@ const Module4Security = () => {
   return (
     <div style={{ maxWidth: '580px' }}>
       <div className="mb-6">
-        <h2 className="text-xl font-bold text-surface-950">Módulo 4 — Control de Acceso</h2>
+        <h2 className="text-xl font-bold text-surface-950">Módulo 5 — Control de Acceso</h2>
         <p className="text-sm text-surface-500 mt-1">Define quién puede ver qué información en tu dashboard.</p>
       </div>
 
@@ -215,9 +215,14 @@ const Module4Security = () => {
         </div>
       )}
 
-      <button onClick={handleSave} className="btn-primary mt-6">
-        Guardar y continuar →
-      </button>
+      <div className="flex items-center gap-3 mt-6">
+        <button onClick={goBack} className="btn-secondary text-sm">
+          ← Anterior
+        </button>
+        <button onClick={handleSave} className="btn-primary">
+          Guardar y continuar →
+        </button>
+      </div>
     </div>
   );
 };

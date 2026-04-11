@@ -26,13 +26,13 @@ const LAYOUTS = [
   { id: 'fullchart', name: 'Full Chart',  desc: 'KPIs compactos + gráfico ancho',  thumb: [{ fixed: true, blocks: [{ c: 'kpi' }, { c: 'kpi' }, { c: 'kpi' }] }, { blocks: [{ c: 'chart' }] }] },
 ];
 
-const FILTER_OPTIONS = ['Fecha', 'Región', 'Categoría', 'Vendedor', 'Canal', 'Año'];
+// FILTER_OPTIONS is now derived dynamically from model columns in the component
 
 const PAGE_TEMPLATES = [
-  { id: 'resumen',     label: 'Resumen Ejecutivo',  desc: 'KPIs + gráfico de barras',     Icon: BarChart,   visual_type: 'bar',   layout: 'executive', filters: ['Fecha', 'Región'] },
-  { id: 'tendencia',   label: 'Análisis Tendencia', desc: 'Serie de tiempo + tendencias', Icon: TrendingUp, visual_type: 'line',  layout: 'trend',     filters: ['Fecha', 'Año'] },
-  { id: 'detalle',     label: 'Detalle Operativo',  desc: 'Tabla detallada con filtros',  Icon: Table,      visual_type: 'table', layout: 'detail',    filters: ['Categoría', 'Vendedor'] },
-  { id: 'comparativo', label: 'Comparativo',        desc: 'Distribución y comparación',   Icon: PieChart,   visual_type: 'pie',   layout: 'overview',  filters: ['Región', 'Canal'] },
+  { id: 'resumen',     label: 'Resumen Ejecutivo',  desc: 'KPIs + gráfico de barras',     Icon: BarChart,   visual_type: 'bar',   layout: 'executive', filters: [] },
+  { id: 'tendencia',   label: 'Análisis Tendencia', desc: 'Serie de tiempo + tendencias', Icon: TrendingUp, visual_type: 'line',  layout: 'trend',     filters: [] },
+  { id: 'detalle',     label: 'Detalle Operativo',  desc: 'Tabla detallada con filtros',  Icon: Table,      visual_type: 'table', layout: 'detail',    filters: [] },
+  { id: 'comparativo', label: 'Comparativo',        desc: 'Distribución y comparación',   Icon: PieChart,   visual_type: 'pie',   layout: 'overview',  filters: [] },
 ];
 
 const suggestLayout = (visualType) => {
@@ -145,7 +145,7 @@ const PageListItem = ({ page, index, active, onClick, onRemove }) => {
 };
 
 // ── Page Editor (right panel) ─────────────────────
-const PageEditor = ({ page, onChange, kpiOptions }) => {
+const PageEditor = ({ page, onChange, kpiOptions, filterOptions = [] }) => {
   const suggestedLayoutId = suggestLayout(page.visual_type);
   const selectedLayout = LAYOUTS.find(l => l.id === page.layout);
 
@@ -282,7 +282,7 @@ const PageEditor = ({ page, onChange, kpiOptions }) => {
       <div>
         <SectionHeader label="Filtros disponibles" gradient="linear-gradient(180deg, #F59E0B, #EF4444)" />
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-          {FILTER_OPTIONS.map(f => {
+          {filterOptions.map(f => {
             const active = (page.filters || []).includes(f);
             return (
               <button
@@ -381,9 +381,16 @@ const EmptyState = ({ onAddTemplate, onAddBlank }) => (
 
 // ── Main Component ─────────────────────────────────
 const Module4Pages = () => {
-  const { project, saveModule } = useProject();
+  const { project, saveModule, goBack } = useProject();
   const defaults = project?.modules?.[4]?.data || {};
   const kpiOptions = (project?.modules?.[3]?.data?.kpis || []).map(k => k.name).filter(Boolean);
+
+  // Build filter options from actual model columns (Module 1 data)
+  const filterOptions = React.useMemo(() => {
+    const tables = project?.modules?.[1]?.data?.tables || [];
+    const cols = tables.flatMap(t => t.columns || []).map(c => c.name).filter(Boolean);
+    return cols.length > 0 ? cols : ['Fecha', 'Región', 'Categoría', 'Vendedor'];
+  }, [project?.modules?.[1]?.data?.tables]);
 
   const [pages, setPages] = useState(defaults.pages || []);
   const [activePage, setActivePage] = useState(0);
@@ -496,27 +503,41 @@ const Module4Pages = () => {
               page={currentPage}
               onChange={(f, v) => updatePage(activePage, f, v)}
               kpiOptions={kpiOptions}
+              filterOptions={filterOptions}
             />
           ) : null}
         </div>
       </div>
 
-      {/* Save button */}
-      <button
-        onClick={() => saveModule(4, { pages })}
-        disabled={!canSave}
-        style={{
-          marginTop: 20, alignSelf: 'flex-start',
-          background: canSave ? 'linear-gradient(135deg, #F2C811, #FCD34D)' : '#E4E4E7',
-          color: canSave ? '#09090B' : '#A1A1AA',
-          border: 'none', borderRadius: 10, padding: '10px 22px',
-          fontSize: 14, fontWeight: 700, cursor: canSave ? 'pointer' : 'not-allowed',
-          fontFamily: 'inherit', transition: 'all 0.15s',
-          boxShadow: canSave ? '0 2px 12px rgba(242,200,17,0.35)' : 'none',
-        }}
-      >
-        Guardar y continuar →
-      </button>
+      {/* Nav buttons */}
+      <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
+        <button
+          onClick={goBack}
+          style={{
+            background: '#FFFFFF', border: '1.5px solid #E4E4E7', borderRadius: 10,
+            padding: '10px 18px', fontSize: 13, fontWeight: 600, color: '#71717A',
+            cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = '#A1A1AA'; e.currentTarget.style.color = '#18181B'; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = '#E4E4E7'; e.currentTarget.style.color = '#71717A'; }}
+        >
+          ← Anterior
+        </button>
+        <button
+          onClick={() => saveModule(4, { pages })}
+          disabled={!canSave}
+          style={{
+            background: canSave ? 'linear-gradient(135deg, #F2C811, #FCD34D)' : '#E4E4E7',
+            color: canSave ? '#09090B' : '#A1A1AA',
+            border: 'none', borderRadius: 10, padding: '10px 22px',
+            fontSize: 14, fontWeight: 700, cursor: canSave ? 'pointer' : 'not-allowed',
+            fontFamily: 'inherit', transition: 'all 0.15s',
+            boxShadow: canSave ? '0 2px 12px rgba(242,200,17,0.35)' : 'none',
+          }}
+        >
+          Guardar y continuar →
+        </button>
+      </div>
     </div>
   );
 };

@@ -18,8 +18,8 @@ const MODULES = {
   3: Module3Business,
   4: Module4Pages,
   5: Module5Security,
-  6: Module6Review,
-  7: Module7Documentation,
+  6: Module7Documentation, // Docs before Review
+  7: Module6Review,        // Review+Generate is last
 };
 
 const ProjectEditor = () => {

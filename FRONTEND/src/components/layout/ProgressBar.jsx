@@ -4,16 +4,17 @@ import { Database, Palette, BarChart2, Shield, ClipboardCheck, BookOpen, Check, 
 const STEPS = [
   { id: 1, short: 'Datos',     Icon: Database },
   { id: 2, short: 'Tema',      Icon: Palette },
-  { id: 3, short: 'Negocio',   Icon: BarChart2 },
+  { id: 3, short: 'KPIs',      Icon: BarChart2 },
   { id: 4, short: 'Páginas',   Icon: Layout },
   { id: 5, short: 'Seguridad', Icon: Shield },
-  { id: 6, short: 'Revisión',  Icon: ClipboardCheck },
-  { id: 7, short: 'Docs',      Icon: BookOpen },
+  { id: 6, short: 'Docs',      Icon: BookOpen },
+  { id: 7, short: 'Generar',   Icon: ClipboardCheck },
 ];
 
 const ProgressBar = ({ current, modules }) => {
-  const completedCount = Object.values(modules || {}).filter((m) => m.completed).length;
-  const pct = Math.round((completedCount / 7) * 100);
+  // Count only the 6 user-fillable modules (1-6); module 7 is auto-completed on generation
+  const completedCount = [1,2,3,4,5,6].filter((i) => modules?.[i]?.completed).length;
+  const pct = Math.round((completedCount / 6) * 100);
 
   return (
     <div style={{

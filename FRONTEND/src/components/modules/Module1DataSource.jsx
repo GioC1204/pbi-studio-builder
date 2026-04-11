@@ -8,11 +8,27 @@ import { Database, Upload, Cloud, Plug, Check, ClipboardList } from 'lucide-reac
 function inferType(values) {
   const nonNull = values.filter((v) => v !== undefined && v !== null && v !== '');
   if (nonNull.length === 0) return 'text';
-  if (nonNull.every((v) => Number.isInteger(Number(v)) && !isNaN(Number(v)))) return 'integer';
+  // XLSX with cellDates:true returns Date objects for date columns — check first
+  if (nonNull.every((v) => v instanceof Date && !isNaN(v.getTime()))) return 'date';
+  // String date patterns (ISO, DD/MM/YYYY, MM-DD-YYYY)
+  const dateRe = /^\d{4}-\d{2}-\d{2}|^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}/;
+  if (nonNull.every((v) => dateRe.test(String(v)))) return 'date';
+  if (nonNull.every((v) => !isNaN(Number(v)) && Number.isInteger(Number(v)))) return 'integer';
   if (nonNull.every((v) => !isNaN(Number(v)))) return 'decimal';
-  if (nonNull.every((v) => !isNaN(Date.parse(String(v))))) return 'date';
   return 'text';
 }
+
+// ── Format cell value for display ─────────────────
+function formatValue(v) {
+  if (v instanceof Date && !isNaN(v.getTime())) {
+    return v.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  }
+  if (v === null || v === undefined) return '—';
+  return String(v);
+}
+
+// ── Human-readable type labels ────────────────────
+const TYPE_LABELS = { integer: 'Entero', decimal: 'Decimal', date: 'Fecha', text: 'Texto' };
 
 // ── Type badge ────────────────────────────────────
 const TypeBadge = ({ type }) => {
@@ -24,7 +40,7 @@ const TypeBadge = ({ type }) => {
   };
   return (
     <span className={`text-2xs font-semibold px-1.5 py-px rounded ${colors[type] || colors.text}`}>
-      {type.toUpperCase()}
+      {TYPE_LABELS[type] || type}
     </span>
   );
 };
@@ -55,7 +71,7 @@ const DataPreview = ({ headers, rows, columns }) => (
             <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
               {headers.map((_, j) => (
                 <td key={j} className="px-3 py-1.5 text-gray-700 whitespace-nowrap">
-                  {row[j] !== undefined && row[j] !== null ? String(row[j]) : <span className="text-gray-300">—</span>}
+                  {row[j] !== undefined && row[j] !== null ? formatValue(row[j]) : <span className="text-gray-300">—</span>}
                 </td>
               ))}
             </tr>

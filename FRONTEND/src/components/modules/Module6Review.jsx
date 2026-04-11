@@ -12,7 +12,7 @@ const STEPS = [
 ];
 
 const Module5Review = () => {
-  const { project, saveModule } = useProject();
+  const { project, saveModule, goBack } = useProject();
   const [generating, setGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState('');
@@ -21,7 +21,8 @@ const Module5Review = () => {
   const eventSource = useRef(null);
 
   const modules = project?.modules || {};
-  const allCompleted = [1, 2, 3, 4, 6].every((i) => modules[i]?.completed);
+  // All 6 user modules (1=Datos, 2=Tema, 3=KPIs, 4=Páginas, 5=Seguridad, 6=Docs) must be complete
+  const allCompleted = [1, 2, 3, 4, 5, 6].every((i) => modules[i]?.completed);
 
   // On mount: check DB status so we show download button if already completed
   useEffect(() => {
@@ -62,7 +63,7 @@ const Module5Review = () => {
     setGenerating(true);
     setProgress(0);
     setCurrentStep('Iniciando generación...');
-    await saveModule(5, { confirmed: true, notes: '' });
+    await saveModule(7, { confirmed: true, notes: '' });
     await api.post(`/projects/${project.id}/generate`);
     pollStatus();
   };
@@ -71,17 +72,27 @@ const Module5Review = () => {
 
   return (
     <div className="max-w-2xl">
-      <h2 className="text-xl font-bold text-gray-900 mb-1">Módulo 5 — Revisión y Generación</h2>
+      <h2 className="text-xl font-bold text-gray-900 mb-1">Módulo 7 — Revisión y Generación</h2>
       <p className="text-sm text-gray-500 mb-6">Revisa el resumen y genera tu dashboard.</p>
 
       {/* Summary */}
       <div className="bg-white rounded-xl border border-gray-100 p-5 mb-6 space-y-3">
-        {[1, 2, 3, 4, 6].map((i) => {
-          const mod = modules[i];
+        {[
+          { id: 1, label: 'Fuente de Datos' },
+          { id: 2, label: 'Tema Visual' },
+          { id: 3, label: 'KPIs y Negocio' },
+          { id: 4, label: 'Páginas del Reporte' },
+          { id: 5, label: 'Control de Acceso' },
+          { id: 6, label: 'Documentación' },
+        ].map(({ id, label }) => {
+          const mod = modules[id];
           return (
-            <div key={i} className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Módulo {i}</span>
-              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${mod?.completed ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
+            <div key={id} className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-gray-400 w-4">{id}</span>
+                <span className="text-sm text-gray-700">{label}</span>
+              </div>
+              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${mod?.completed ? 'bg-green-100 text-green-700' : 'bg-amber-50 text-amber-600 border border-amber-200'}`}>
                 {mod?.completed ? '✓ Completo' : 'Pendiente'}
               </span>
             </div>
@@ -90,13 +101,21 @@ const Module5Review = () => {
       </div>
 
       {!generating && !completed && (
-        <button
-          onClick={startGeneration}
-          disabled={!allCompleted}
-          className="bg-yellow-400 hover:bg-yellow-500 disabled:opacity-40 text-gray-900 font-bold px-8 py-3 rounded-xl text-sm"
-        >
-          Generar Dashboard
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={goBack}
+            className="px-4 py-3 rounded-xl text-sm font-medium text-gray-500 hover:text-gray-700 border border-gray-200 hover:border-gray-300 bg-white transition-colors"
+          >
+            ← Anterior
+          </button>
+          <button
+            onClick={startGeneration}
+            disabled={!allCompleted}
+            className="bg-yellow-400 hover:bg-yellow-500 disabled:opacity-40 text-gray-900 font-bold px-8 py-3 rounded-xl text-sm"
+          >
+            Generar Dashboard
+          </button>
+        </div>
       )}
 
       {generating && !completed && (

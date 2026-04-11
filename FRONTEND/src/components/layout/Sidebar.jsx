@@ -3,13 +3,13 @@ import { useProject } from '../../context/ProjectContext';
 import { Database, Palette, BarChart2, Shield, ClipboardCheck, BookOpen, Check, Layout } from 'lucide-react';
 
 const MODULE_LIST = [
-  { id: 1, label: 'Fuente de Datos',   Icon: Database },
-  { id: 2, label: 'Tema Visual',        Icon: Palette },
-  { id: 3, label: 'Lógica de Negocio', Icon: BarChart2 },
-  { id: 4, label: 'Páginas',            Icon: Layout },
-  { id: 5, label: 'Seguridad',          Icon: Shield },
-  { id: 6, label: 'Revisión',           Icon: ClipboardCheck },
-  { id: 7, label: 'Documentación',      Icon: BookOpen },
+  { id: 1, label: 'Datos',          Icon: Database },
+  { id: 2, label: 'Tema Visual',    Icon: Palette },
+  { id: 3, label: 'KPIs',           Icon: BarChart2 },
+  { id: 4, label: 'Páginas',        Icon: Layout },
+  { id: 5, label: 'Seguridad',      Icon: Shield },
+  { id: 6, label: 'Documentación',  Icon: BookOpen },
+  { id: 7, label: 'Revisión',       Icon: ClipboardCheck },
 ];
 
 const Sidebar = () => {

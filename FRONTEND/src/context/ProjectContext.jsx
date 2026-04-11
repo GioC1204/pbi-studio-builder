@@ -24,8 +24,12 @@ export const ProjectProvider = ({ children }) => {
     if (moduleNum < 7) setCurrentModule(moduleNum + 1);
   }, [project]);
 
+  const goBack = useCallback(() => {
+    setCurrentModule((prev) => Math.max(1, prev - 1));
+  }, []);
+
   return (
-    <ProjectContext.Provider value={{ project, currentModule, setCurrentModule, loadProject, saveModule }}>
+    <ProjectContext.Provider value={{ project, currentModule, setCurrentModule, loadProject, saveModule, goBack }}>
       {children}
     </ProjectContext.Provider>
   );
