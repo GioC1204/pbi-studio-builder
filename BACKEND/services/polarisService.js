@@ -178,12 +178,14 @@ async function generateSemanticModel(config, dir) {
     }
 
     // Partition — every table must have one with mode: import
-    // Using single-line M expression to avoid TMDL indentation parsing issues
+    // #table({col names}, {}) creates an empty table with the correct schema
+    // so DAX measures can resolve column references without Missing_References errors
     const pName = `${safeTmdlFile(table.name)}-partition`;
+    const colList = (table.columns || []).map((c) => `"${c.name}"`).join(', ');
     const partition = [
       `\tpartition ${pName} = m`,
       `\t\tmode: import`,
-      `\t\tsource = Table.FromRows({})`,
+      `\t\tsource = #table({${colList}}, {})`,
     ].join('\n');
 
     const tmdl = [
