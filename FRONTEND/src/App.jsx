@@ -6,6 +6,7 @@ import ProjectList from './pages/ProjectList';
 import LoginPage from './pages/LoginPage';
 import AdminPanel from './pages/AdminPanel';
 import NotFound from './pages/NotFound';
+import ShowcasePage from './pages/ShowcasePage';
 import { useUser } from './context/UserContext';
 
 const PrivateRoute = ({ children }) => {
@@ -22,6 +23,7 @@ const App = () => {
       <Route path="/projects" element={<PrivateRoute><ProjectList /></PrivateRoute>} />
       <Route path="/projects/:id" element={<PrivateRoute><ProjectEditor /></PrivateRoute>} />
       <Route path="/admin" element={<PrivateRoute><AdminPanel /></PrivateRoute>} />
+      <Route path="/showcase" element={<ShowcasePage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
